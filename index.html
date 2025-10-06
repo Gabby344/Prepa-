@@ -63,12 +63,6 @@
       justify-content: center;
     }
     
-    .grid button:before {
-        margin-right: 8px;
-        font-weight: bold;
-    }
-    /* Les icônes pour la grille sont gérées par le texte du bouton dans le HTML, c'est plus simple ici */
-
     .grid button:hover {
       background-color: #1a252f;
       transform: scale(1.05);
@@ -84,7 +78,7 @@
 
     .progress-bar {
       height: 20px;
-      width: 12%;
+      width: 0%; /* Initialisation à 0% */
       background-color: #25D366;
       transition: width 1s ease;
     }
@@ -175,7 +169,6 @@
         margin-bottom: 30px;
         color: #555;
     }
-    /* Bouton retour dans les pages de contenu */
     .content-page button {
         width: 50%;
         margin: 0 auto;
@@ -225,7 +218,7 @@
     <div class="slogan">Révise avec clarté. Progresse avec fierté.</div>
 
     <div class="grid">
-      <button onclick="changerPage('quiz')">📚 Quiz</button>
+      <button onclick="changerPage('quiz')">📚 Quiz</button> 
       <button onclick="changerPage('fiches')">📄 Fiches</button>
       <button onclick="changerPage('defis')">🏆 Défis</button>
       <button onclick="changerPage('coaching')">🧠 Coaching IA</button>
@@ -234,11 +227,15 @@
     <div class="progress">
       <div class="progress-bar" id="progressBar"></div>
     </div>
-    <p>Tu as révisé <strong id="progressText">12%</strong> cette semaine</p>
+    <p>Tu as révisé <strong id="progressText">0%</strong> cette semaine</p>
 
     <div class="quote">“Ton avenir mérite ton attention aujourd’hui.”</div>
-
-    <div id="quizContainer"></div>
+    
+    <div id="quizContainer">
+        <div class="page" style="text-align: center; padding: 30px;">
+            Clique sur 📚 Quiz pour commencer une session de révision !
+        </div>
+    </div>
 
     <div class="admin-link">
       <a href="admin.html"><button>🔐 Accès Admin</button></a>
@@ -266,6 +263,7 @@
   <footer>Conçu avec passion par <strong>Gabby Umba — ISC Lwanga</strong></footer>
 
   <script>
+    // ⚠️ CONFIGURATION FIREBASE
     const firebaseConfig = {
       apiKey: "AIzaSyAuHPWVOkd96xPqKQ_K1cC4n4ihuPfuNFQ",
       authDomain: "abiga-1718.firebaseapp.com",
@@ -278,7 +276,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Mappage des pages pour une gestion facile
+    // Mappage des pages pour la fonction changerPage()
     const pages = {
         'dashboard': 'dashboardPage',
         'quiz': 'dashboardPage', 
@@ -287,54 +285,128 @@
         'coaching': 'coachingPage'
     };
 
+    let essais = {}; // Compteur d'essais pour chaque question
+    let questionsDuJour = []; // Les questions tirées au sort pour la session
+    let questionsReussies = new Set(); // ID des questions déjà réussies dans cette session
+    const MAX_QUESTIONS = 5; // Nombre maximum de questions à afficher
+    const PROGRESSION_PAR_QUESTION = 5; // Chaque question réussie augmente la progression de 5%
+
+    // --- GESTION DE LA PROGRESSION (Étape 2) ---
+    let progressionActuelle = 0; // Stocke la progression en %
+    
     window.onload = () => {
-      document.getElementById("progressBar").style.width = "12%";
-      document.getElementById("progressText").textContent = "12%";
+        // Charge la progression enregistrée (ou commence à 0)
+        progressionActuelle = parseInt(localStorage.getItem('user_progress')) || 0;
+        mettreAJourProgressionUI();
     };
 
-    let essais = {}; // Compteur d'essais pour chaque question
+    /** Met à jour la barre de progression et le texte. */
+    function mettreAJourProgressionUI() {
+        document.getElementById("progressBar").style.width = progressionActuelle + "%";
+        document.getElementById("progressText").textContent = progressionActuelle + "%";
+        // Sauvegarde la progression
+        localStorage.setItem('user_progress', progressionActuelle);
 
-    /**
-     * Change l'écran affiché en masquant les autres.
-     * @param {string} pageId - L'identifiant de la page à afficher (e.g., 'fiches').
-     */
+        // Si 100% est atteint, réinitialisation (ou affichage d'un message de félicitations)
+        if (progressionActuelle >= 100) {
+            alert("Félicitations ! Tu as atteint ton objectif de révision pour cette semaine. Réinitialisation de la progression.");
+            progressionActuelle = 0;
+            mettreAJourProgressionUI();
+        }
+    }
+
+
+    // --- FONCTION DE NAVIGATION ---
+    
     function changerPage(pageId) {
-        // Liste de tous les conteneurs de pages que l'on veut gérer
         const allPageContainers = document.querySelectorAll('#dashboardPage, .content-page');
         
-        // 1. Masquer toutes les pages
         allPageContainers.forEach(page => {
             page.style.display = 'none';
         });
         
-        // 2. Afficher la page demandée
         const targetPageElement = document.getElementById(pages[pageId]);
         if (targetPageElement) {
             targetPageElement.style.display = 'block';
         }
         
-        // 3. Logique spécifique pour le Quiz
         if (pageId === 'quiz') {
             chargerQuiz(); 
         }
     }
 
 
+    // --- FONCTIONS DU QUIZ ---
+
+    /** Tire au sort les questions depuis la base de données (Étape 1). */
+    async function chargerQuiz() {
+      const container = document.getElementById("quizContainer");
+      container.innerHTML = "Chargement des questions...";
+
+      try {
+        const snapshot = await db.collection("quizzes").get();
+
+        if (snapshot.empty) {
+             container.innerHTML = "<div class='page'>Aucune question de quiz trouvée dans la base de données.</div>";
+             return;
+        }
+
+        const toutesLesQuestions = [];
+        snapshot.forEach(doc => {
+            // Ajout du ID du document à l'objet de données
+            toutesLesQuestions.push({ id: doc.id, ...doc.data() }); 
+        });
+
+        // 1. Mélanger le tableau de questions
+        toutesLesQuestions.sort(() => Math.random() - 0.5); 
+        
+        // 2. Sélectionner les X premières questions
+        questionsDuJour = toutesLesQuestions.slice(0, MAX_QUESTIONS);
+        questionsReussies.clear(); // Réinitialise le suivi des réussites
+        essais = {}; // Réinitialise les essais
+
+        container.innerHTML = ""; // Vider après chargement
+        
+        if (questionsDuJour.length === 0) {
+            container.innerHTML = "<div class='page'>Aucune question n'a été sélectionnée.</div>";
+            return;
+        }
+
+        // 3. Afficher les questions sélectionnées
+        questionsDuJour.forEach(data => {
+          // Gérer les apostrophes pour passer les chaînes de caractères aux fonctions JS
+          const safeExplication = data.explication ? data.explication.replace(/'/g, "\\'") : '';
+          const safeReponses = data.bonneReponse ? data.bonneReponse.replace(/'/g, "\\'") : '';
+
+          const div = document.createElement('div');
+          div.className = 'page';
+          div.innerHTML = `
+            <h3>${data.question}</h3>
+            ${data.options.map(opt => `
+              <button onclick="verifierReponse(this, '${opt.replace(/'/g, "\\'")}', '${safeReponses}', \`${safeExplication}\`, '${data.id}')">${opt}</button>
+            `).join('')}
+            `;
+          container.appendChild(div);
+        });
+
+      } catch (error) {
+        console.error("Erreur lors du chargement des quizzes : ", error);
+        container.innerHTML = "<div class='page'>Erreur de connexion à la base de données.</div>";
+      }
+    }
+
     /**
      * Vérifie la réponse du quiz et fournit un feedback visuel.
-     * @param {HTMLElement} element - Le bouton sur lequel l'utilisateur a cliqué.
-     * @param {string} reponse - La réponse sélectionnée.
-     * @param {string} bonneReponse - La bonne réponse attendue.
-     * @param {string} explication - L'explication à afficher.
-     * @param {string} questionId - L'ID unique de la question.
      */
     function verifierReponse(element, reponse, bonneReponse, explication, questionId) {
         if (!essais[questionId]) essais[questionId] = 0;
-        essais[questionId]++;
-
+        
         const parentDiv = element.closest('.page');
         const optionsButtons = parentDiv.querySelectorAll('button');
         let explicationDiv = parentDiv.querySelector('.explication');
+        
+        // Si la question a déjà été réussie, ignorer l'action
+        if (questionsReussies.has(questionId)) return;
 
         // Créer la zone d'explication si elle n'existe pas
         if (!explicationDiv) {
@@ -344,7 +416,6 @@
         }
 
         explicationDiv.style.display = 'block';
-        optionsButtons.forEach(btn => btn.disabled = true);
         
         // Si la réponse est correcte
         if (reponse === bonneReponse) {
@@ -353,12 +424,20 @@
             explicationDiv.style.borderLeftColor = '#25D366';
             
             explicationDiv.innerHTML = `✅ **Bonne réponse !**<br> ${explication}`;
-            essais[questionId] = 0; 
             
-            // NOTE: La logique pour mettre à jour la progression doit être ajoutée ici !
+            // Une seule réussite par question
+            if (!questionsReussies.has(questionId)) {
+                questionsReussies.add(questionId);
+                // Mise à jour de la progression (Étape 2)
+                progressionActuelle += PROGRESSION_PAR_QUESTION;
+                mettreAJourProgressionUI();
+            }
+
+            optionsButtons.forEach(btn => btn.disabled = true); // Désactiver toutes les options
         } 
         // Si la réponse est incorrecte
         else {
+            essais[questionId]++;
             element.style.backgroundColor = '#E57373'; // Rouge
             
             if (essais[questionId] >= 3) {
@@ -368,11 +447,11 @@
                         btn.style.backgroundColor = '#25D366';
                         btn.style.opacity = 1;
                     }
+                    btn.disabled = true; // Désactiver toutes les options après 3 essais
                 });
                 
                 explicationDiv.style.borderLeftColor = '#E57373';
                 explicationDiv.innerHTML = `❌ **Fin des essais.**<br>La bonne réponse était : **${bonneReponse}**.<br>📘 Explication : ${explication}`;
-                essais[questionId] = 0;
                 
             } else {
                 // Tentative incorrecte - permettre d'essayer une autre option
@@ -383,52 +462,6 @@
                 explicationDiv.innerHTML = `❌ Mauvaise réponse. Essaie encore (Tentative ${essais[questionId]} / 3)`;
             }
         }
-    }
-
-    /**
-     * Charge les questions du quiz depuis Firebase et les affiche.
-     */
-    async function chargerQuiz() {
-      const container = document.getElementById("quizContainer");
-      container.innerHTML = "Chargement des questions...";
-
-      try {
-        const snapshot = await db.collection("quizzes").get();
-        container.innerHTML = ""; // Vider après chargement
-
-        if (snapshot.empty) {
-             container.innerHTML = "Aucune question de quiz trouvée dans la base de données. Utilisez l'Accès Admin pour en ajouter.";
-             return;
-        }
-
-        const questionsDéjàAffichées = new Set();
-        
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          const id = doc.id;
-
-          if (questionsDéjàAffichées.has(data.question)) return;
-          questionsDéjàAffichées.add(data.question);
-
-          // On gère les apostrophes dans la chaîne de caractères passée à la fonction JS
-          const safeExplication = data.explication ? data.explication.replace(/'/g, "\\'") : '';
-          const safeReponses = data.bonneReponse ? data.bonneReponse.replace(/'/g, "\\'") : '';
-
-          const div = document.createElement('div');
-          div.className = 'page';
-          div.innerHTML = `
-            <h3>${data.question}</h3>
-            ${data.options.map(opt => `
-              <button onclick="verifierReponse(this, '${opt.replace(/'/g, "\\'")}', '${safeReponses}', \`${safeExplication}\`, '${id}')">${opt}</button>
-            `).join('')}
-            `;
-          container.appendChild(div);
-        });
-
-      } catch (error) {
-        console.error("Erreur lors du chargement des quizzes : ", error);
-        container.innerHTML = "Erreur de connexion à la base de données. Vérifiez votre console.";
-      }
     }
   </script>
 </body>
