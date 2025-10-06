@@ -41,7 +41,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      /* REMPLACEZ L'URL CI-DESSOUS PAR VOTRE PROPRE IMAGE D'ÉLÈVES */
+      /* Votre image (IMG_7393.jpeg) */
       background: url('IMG_7393.jpeg') no-repeat center center/cover; 
       z-index: -2; 
     }
@@ -54,7 +54,8 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(240, 244, 247, 0.85); 
+        /* 🎨 CORRECTION : Réduction de l'opacité à 0.5 pour rendre l'image plus visible */
+        background: rgba(240, 244, 247, 0.5); 
         z-index: -1;
     }
     
@@ -76,7 +77,6 @@
       font-size: 3em;
       margin-top: 10px;
       color: var(--primary-color);
-      letter-spacing: 0.5px;
       font-weight: 700;
     }
 
@@ -108,7 +108,6 @@
       transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
     
     .grid button:hover {
@@ -158,7 +157,6 @@
       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15); 
     }
     
-    /* Correction de la Répétition/Affichage du Quiz */
     #quizContainer .page {
         margin-bottom: 15px;
         padding-top: 15px;
@@ -356,7 +354,7 @@
         <button onclick="changerPage('dashboard')">Retour à l'accueil</button>
     </div>
 
-  </div> <footer>Conçu avec passion par <strong>Gabby Umba — ISC Lwanga</strong></footer>
+  </div> <footer>Conçu par <strong>Gabby Umba</strong></footer>
 
   <script>
     // ⚠️ CONFIGURATION FIREBASE (non modifiée)
@@ -441,36 +439,33 @@
     }
     
     function changerMatiere() {
-        chargerQuiz(); 
+        // 🗑️ CORRECTION DU BUG DE RÉPÉTITION : 
+        // L'appel à chargerQuiz() a été retiré ici pour s'assurer qu'il n'est déclenché que par le bouton.
     }
 
     // --- FONCTION DE NAVIGATION ---
     
     function changerPage(pageId) {
-        // Cache toutes les pages de contenu pour commencer
         const allPageContainers = document.querySelectorAll('.content-page');
         allPageContainers.forEach(page => {
             page.style.display = 'none';
         });
         
-        // Afficher la page dashboard
         document.getElementById('dashboardPage').style.display = 'block';
 
         if (pageId !== 'dashboard' && pageId !== 'quiz') {
-            // Cacher les éléments spécifiques au quiz si on va sur une autre page
             document.getElementById('quizContainer').style.display = 'none';
             document.querySelector('.quiz-filter').style.display = 'none';
 
-            // Afficher la page de contenu spécifique
             document.getElementById(pageId + 'Page').style.display = 'block';
         } else {
-            // Si on retourne au dashboard/quiz, assurer que les éléments du quiz sont visibles
             document.getElementById('quizContainer').style.display = 'block';
             document.querySelector('.quiz-filter').style.display = 'block';
         }
         
         if (pageId === 'quiz') {
-            chargerQuiz(); 
+            // 🗑️ CORRECTION DU BUG DE RÉPÉTITION : 
+            // L'appel à chargerQuiz() a été retiré ici pour s'assurer qu'il n'est déclenché que par le bouton.
         }
     }
 
@@ -480,7 +475,7 @@
     async function chargerQuiz() {
       const container = document.getElementById("quizContainer");
       
-      // 💥 CORRECTION MAJEURE: Vider le conteneur IMMÉDIATEMENT
+      // 💥 Vider le conteneur IMMÉDIATEMENT pour afficher un message de chargement
       container.innerHTML = "<div class='page' style='text-align: center;'>Chargement des questions...</div>";
       
       const matiereSelectionnee = document.getElementById("matiereSelect").value;
@@ -503,7 +498,7 @@
             toutesLesQuestions.push({ id: doc.id, ...doc.data() }); 
         });
 
-        // 1. Mélanger le tableau de questions
+        // 1. Mélanger le tableau de questions pour le rendre aléatoire
         toutesLesQuestions.sort(() => Math.random() - 0.5); 
         
         // 2. Sélectionner les X premières questions UNIQUES
@@ -511,7 +506,7 @@
         questionsReussies.clear(); 
         essais = {}; 
 
-        // Important: Vider le conteneur une seconde fois (avant l'affichage final)
+        // Vider le conteneur une dernière fois avant d'insérer les questions
         container.innerHTML = ""; 
         
         if (questionsDuJour.length === 0) {
