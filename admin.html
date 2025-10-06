@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin Prépa+ — Sécurisé</title>
+  <title>Admin Prépa+</title>
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore-compat.js"></script>
   <style>
@@ -47,44 +47,34 @@
       margin-top: 15px;
       color: green;
       font-weight: bold;
-    }
-    #formulaire, #successMsg {
-      display: none;
+      text-align: center;
     }
   </style>
 </head>
 <body>
 
-  <h2>🔐 Accès Admin</h2>
+  <h2>📘 Ajouter un Quiz</h2>
 
-  <label for="motDePasse">Mot de passe</label>
-  <input type="password" id="motDePasse" placeholder="••••••••" />
-  <button onclick="verifierMotDePasse()">Accéder</button>
+  <label for="matiere">Matière</label>
+  <input type="text" id="matiere" placeholder="Ex: Mathématiques" />
 
-  <div id="formulaire">
-    <h2>📘 Ajouter un Quiz</h2>
+  <label for="niveau">Niveau</label>
+  <input type="text" id="niveau" placeholder="Ex: Facile" />
 
-    <label for="matiere">Matière</label>
-    <input type="text" id="matiere" placeholder="Ex: Mathématiques" />
+  <label for="question">Question</label>
+  <textarea id="question" rows="2" placeholder="Ex: Combien font 7 × 8 ?"></textarea>
 
-    <label for="niveau">Niveau</label>
-    <input type="text" id="niveau" placeholder="Ex: Facile" />
+  <label for="options">Options (séparées par des virgules)</label>
+  <input type="text" id="options" placeholder="Ex: 54, 56, 58, 60" />
 
-    <label for="question">Question</label>
-    <textarea id="question" rows="2" placeholder="Ex: Combien font 7 × 8 ?"></textarea>
+  <label for="bonneReponse">Bonne réponse</label>
+  <input type="text" id="bonneReponse" placeholder="Ex: 56" />
 
-    <label for="options">Options (séparées par des virgules)</label>
-    <input type="text" id="options" placeholder="Ex: 54, 56, 58, 60" />
+  <label for="explication">Explication</label>
+  <textarea id="explication" rows="3" placeholder="Ex: 7 × 8 = 56 car..."></textarea>
 
-    <label for="bonneReponse">Bonne réponse</label>
-    <input type="text" id="bonneReponse" placeholder="Ex: 56" />
-
-    <label for="explication">Explication</label>
-    <textarea id="explication" rows="3" placeholder="Ex: 7 × 8 = 56 car..."></textarea>
-
-    <button onclick="ajouterQuiz()">Ajouter le quiz</button>
-    <div class="success" id="successMsg"></div>
-  </div>
+  <button onclick="ajouterQuiz()">Ajouter le quiz</button>
+  <div class="success" id="successMsg"></div>
 
   <script>
     const firebaseConfig = {
@@ -99,42 +89,41 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    const motDePasseAdmin = "prepa2025"; // 🔐 Tu peux le changer ici
-
-    function verifierMotDePasse() {
-      const saisie = document.getElementById("motDePasse").value;
-      if (saisie === motDePasseAdmin) {
-        document.getElementById("formulaire").style.display = "block";
-        document.getElementById("motDePasse").style.display = "none";
-        document.querySelector("button").style.display = "none";
-      } else {
-        alert("🛑 Mot de passe incorrect.");
-      }
-    }
-
     async function ajouterQuiz() {
       const matiere = document.getElementById("matiere").value.trim();
       const niveau = document.getElementById("niveau").value.trim();
       const question = document.getElementById("question").value.trim();
-      const options = document.getElementById("options").value.split(',').map(opt => opt.trim());
+      const optionsRaw = document.getElementById("options").value.trim();
       const bonneReponse = document.getElementById("bonneReponse").value.trim();
       const explication = document.getElementById("explication").value.trim();
+
+      const options = optionsRaw.split(',').map(opt => opt.trim()).filter(opt => opt);
 
       if (!matiere || !niveau || !question || options.length < 2 || !bonneReponse || !explication) {
         alert("🛑 Remplis tous les champs correctement.");
         return;
       }
 
-      await db.collection("quizzes").add({
-        matière: matiere,
-        niveau: niveau,
-        question: question,
-        options: options,
-        bonneReponse: bonneReponse,
-        explication: explication
-      });
+      try {
+        await db.collection("quizzes").add({
+          matière: matiere,
+          niveau: niveau,
+          question: question,
+          options: options,
+          bonneReponse: bonneReponse,
+          explication: explication
+        });
 
-      document.getElementById("successMsg").innerText = "✅ Quiz ajouté avec succès !";
+        document.getElementById("successMsg").innerText = "✅ Quiz ajouté avec succès !";
+        document.getElementById("matiere").value = "";
+        document.getElementById("niveau").value = "";
+        document.getElementById("question").value = "";
+        document.getElementById("options").value = "";
+        document.getElementById("bonneReponse").value = "";
+        document.getElementById("explication").value = "";
+      } catch (error) {
+        alert("❌ Erreur lors de l'ajout : " + error.message);
+      }
     }
   </script>
 </body>
