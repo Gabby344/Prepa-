@@ -15,23 +15,56 @@
     :root {
       --primary-color: #1C3D5A; /* Bleu marine profond (Boutons principaux, titres) */
       --secondary-color: #2ECC71; /* Vert Émeraude (Succès, Progression) */
-      --background-light: #F8F9FA; /* Fond de page très clair */
+      --background-light: #F8F9FA; /* Fond de page très clair (utilisé pour les cartes) */
       --card-bg: #FFFFFF; /* Fond des cartes/pages */
       --text-dark: #34495E; /* Texte général sombre */
       --error-color: #E74C3C; /* Rouge Erreur */
     }
 
-    /* GENERAL */
+    /* BACKGROUND ET BODY (NOUVEAU) */
     body {
       font-family: 'Open Sans', sans-serif;
-      background-color: var(--background-light);
       color: var(--text-dark);
       margin: 0;
-      padding: 30px 20px;
+      padding: 0; 
       text-align: center;
-      animation: fadeIn 1.5s ease forwards;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
     }
 
+    /* COUCHE D'ARRIÈRE-PLAN AVEC IMAGE */
+    .background-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      /* REMPLACEZ L'URL CI-DESSOUS PAR VOTRE PROPRE IMAGE D'ÉLÈVES */
+      background: url('https://source.unsplash.com/random/1200x1200/?students,classroom') no-repeat center center/cover; 
+      z-index: -2; /* Sous tout le contenu */
+    }
+
+    /* FILTRE ASSOMBRISSANT (pour lisibilité) */
+    .background-overlay::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(240, 244, 247, 0.85); /* Fond très clair et légèrement opaque */
+        z-index: -1;
+    }
+    
+    /* CONTENEUR PRINCIPAL DU CONTENU (pour le padding) */
+    #main-content {
+        padding: 30px 20px;
+        flex-grow: 1;
+        animation: fadeIn 1.5s ease forwards;
+    }
+    
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(15px); }
       to { opacity: 1; transform: translateY(0); }
@@ -79,7 +112,7 @@
     }
     
     .grid button:hover {
-      background-color: #294A64; /* Lighter primary on hover */
+      background-color: #294A64; 
       transform: translateY(-2px);
       box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
     }
@@ -89,10 +122,10 @@
       margin: 20px auto;
       width: 90%;
       max-width: 500px;
-      background-color: #ECF0F1; /* Gris clair */
+      background-color: #ECF0F1; 
       border-radius: 15px;
       overflow: hidden;
-      height: 25px; /* Plus épais */
+      height: 25px; 
     }
 
     .progress-bar {
@@ -112,7 +145,7 @@
       padding: 0 10px;
     }
 
-    /* PAGES/CARTES (Quiz & Contenu) */
+    /* CARTES QUIZ & PAGES DE CONTENU */
     .page, .content-page {
       background: var(--card-bg);
       border: none;
@@ -122,22 +155,21 @@
       width: 95%;
       max-width: 500px;
       text-align: left;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1); /* Ombre plus profonde */
-      animation: fadeIn 0.6s ease;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15); 
     }
     
-    /* Style pour le conteneur du Quiz */
+    /* Correction de la Répétition/Affichage du Quiz */
     #quizContainer .page {
         margin-bottom: 15px;
         padding-top: 15px;
         padding-bottom: 15px;
     }
-
+    
     .page h3 {
       margin-bottom: 15px;
       font-size: 1.15em;
       color: var(--text-dark);
-      font-weight: 600;
+      font-weight: 700;
       line-height: 1.4;
     }
 
@@ -146,7 +178,7 @@
       margin: 8px 0;
       padding: 12px;
       width: 100%;
-      background-color: #EAECEE; /* Gris clair élégant pour les options */
+      background-color: #EAECEE; 
       color: var(--text-dark);
       border: 1px solid #D5DBDB;
       border-radius: 8px;
@@ -162,35 +194,6 @@
       border-color: var(--primary-color);
     }
     
-    /* Feedback visuel */
-    .page button[disabled][style*="background-color: rgb(37, 211, 102)"] { /* Vert */
-        background-color: var(--secondary-color) !important;
-        color: white;
-        font-weight: 600;
-    }
-    .page button[disabled][style*="background-color: rgb(229, 115, 115)"] { /* Rouge */
-        background-color: var(--error-color) !important;
-        color: white;
-    }
-
-    .explication {
-      margin-top: 20px;
-      padding: 15px;
-      border-radius: 8px;
-      line-height: 1.5;
-      font-size: 0.95em;
-      background-color: #F4F6F8;
-      color: var(--text-dark);
-      text-align: left;
-      border-left: 6px solid var(--primary-color); 
-      box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
-    }
-    
-    .explication strong {
-        font-weight: 700;
-        color: var(--primary-color);
-    }
-
     /* FILTRE */
     .quiz-filter {
         text-align: center;
@@ -224,109 +227,139 @@
         padding: 10px 20px; 
         background-color: var(--secondary-color); 
         color: white;
+        border: none;
+        border-radius: 8px;
+        transition: background-color 0.2s;
     }
     .quiz-filter button:hover {
       background-color: #27AE60;
-      transform: scale(1.05);
+      transform: none; /* Enlever le scale pour ce bouton */
     }
     
-    /* FOOTER & ADMIN */
-    .admin-link a button {
-      background-color: #95A5A6; 
+    /* BOUTON ADMIN (Plus Grand et Centré) */
+    .admin-link {
+      margin-top: 40px;
+      padding-bottom: 40px; /* Espace avant le footer */
     }
-    .admin-link a button:hover {
+
+    .admin-link a {
+      text-decoration: none;
+    }
+
+    .admin-link button {
+      padding: 15px 30px; /* Plus grand */
+      background-color: #95A5A6; 
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.1em; /* Plus grande police */
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      width: 80%; /* Occuper plus d'espace */
+      max-width: 350px;
+    }
+    .admin-link button:hover {
       background-color: #7F8C8D;
+      transform: translateY(-2px);
     }
 
     footer {
-      margin-top: 40px;
+      width: 100%;
+      padding: 15px 0;
       font-size: 0.85em;
       color: #95A5A6;
       font-weight: 600;
+      background-color: rgba(255, 255, 255, 0.8); /* Footer léger */
+      margin-top: auto; /* Pousser vers le bas */
     }
   </style>
 </head>
 <body>
+  
+  <div class="background-overlay"></div>
+  
+  <div id="main-content">
 
-  <div id="dashboardPage"> 
+    <div id="dashboardPage"> 
+      <div class="logo">📘 Prépa+</div>
+      <div class="slogan">Révise avec clarté. Progresse avec fierté.</div>
 
-    <div class="logo">📘 Prépa+</div>
-    <div class="slogan">Révise avec clarté. Progresse avec fierté.</div>
+      <div class="grid">
+        <button onclick="changerPage('quiz')">📚 Quiz</button> 
+        <button onclick="changerPage('fiches')">📄 Fiches</button>
+        <button onclick="changerPage('defis')">🏆 Défis</button>
+        <button onclick="changerPage('coaching')">🧠 Coaching IA</button>
+      </div>
 
-    <div class="grid">
-      <button onclick="changerPage('quiz')">📚 Quiz</button> 
-      <button onclick="changerPage('fiches')">📄 Fiches</button>
-      <button onclick="changerPage('defis')">🏆 Défis</button>
-      <button onclick="changerPage('coaching')">🧠 Coaching IA</button>
-    </div>
+      <div class="progress">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <p style="font-weight: 600; color: var(--text-dark);">Tu as révisé <strong id="progressText">0%</strong> cette semaine</p>
 
-    <div class="progress">
-      <div class="progress-bar" id="progressBar"></div>
-    </div>
-    <p style="font-weight: 600; color: var(--text-dark);">Tu as révisé <strong id="progressText">0%</strong> cette semaine</p>
-
-    <div class="quote">“Ton avenir mérite ton attention aujourd’hui.” — Proverbe Africain</div>
-    
-    <div class="quiz-filter">
-        <label for="matiereSelect">Filtrer par Matière :</label>
-        <select id="matiereSelect" onchange="changerMatiere()">
-            <option value="tout">Toutes les Matières</option>
-        </select>
-        <button onclick="chargerQuiz()">Lancer le Quiz</button>
-    </div>
-
-    <div id="quizContainer">
-        <div class="page" style="text-align: center; padding: 40px; color: #555;">
-            Sélectionne une matière ou clique sur "Lancer le Quiz" pour commencer ta session de révision !
-        </div>
-    </div>
-
-    <div class="admin-link">
-      <a href="admin.html"><button>🔐 Accès Admin</button></a>
-    </div>
-
-  </div> 
-
-  <div id="fichesPage" class="content-page" style="display: none;">
-      <h2>📄 Mes Fiches de Révision</h2>
-      <p style="text-align: center; color: #555;">Consolide tes connaissances par la lecture de fiches thématiques.</p>
+      <div class="quote">“Ton avenir mérite ton attention aujourd’hui.” — Proverbe Africain</div>
       
-      <h3 style="color: var(--primary-color);">Thèmes Disponibles :</h3>
-      <ul style="list-style-type: '👉'; padding-left: 20px;">
-        <li><span style="margin-left: 10px;">Géographie : Les grands fleuves africains</span></li>
-        <li><span style="margin-left: 10px;">Histoire : L'indépendance de la RDC</span></li>
-        <li><span style="margin-left: 10px;">Économie : Les principes de la microéconomie</span></li>
-      </ul>
-      <p style="font-size: 0.9em; margin-top: 25px; text-align: left; color: #7F8C8D;">💡 **Astuce :** Ces fiches sont directement liées aux questions des quiz.</p>
-      <button onclick="changerPage('dashboard')">Retour à l'accueil</button>
-  </div>
+      <div class="quiz-filter">
+          <label for="matiereSelect">Filtrer par Matière :</label>
+          <select id="matiereSelect" onchange="changerMatiere()">
+              <option value="tout">Toutes les Matières</option>
+          </select>
+          <button onclick="chargerQuiz()">Lancer le Quiz</button>
+      </div>
 
-  <div id="defisPage" class="content-page" style="display: none;">
-      <h2>🏆 Défis de la Semaine</h2>
-      <p style="text-align: center; color: #555;">Mesure-toi à d'autres élèves de l'Institut Saint Charles Lwanga et grimpe dans le classement !</p>
-      
-      <h3 style="color: var(--primary-color);">Défi Actuel :</h3>
-      <p style="font-weight: bold; color: var(--text-dark); margin-bottom: 5px;">Challenge : Répondre correctement à 20 questions de Droit en moins de 5 minutes.</p>
-      <p style="font-weight: 700; color: var(--secondary-color); font-size: 1.1em; text-align: center;">Statut : Non commencé</p>
-      <p style="font-size: 0.9em; color: #7F8C8D; text-align: center;">Prochain défi disponible : demain à 18h00.</p>
-      <button onclick="changerPage('dashboard')">Retour à l'accueil</button>
-  </div>
+      <div id="quizContainer">
+          <div class="page" style="text-align: center; padding: 40px; color: #555;">
+              Sélectionne une matière ou clique sur "Lancer le Quiz" pour commencer ta session de révision !
+          </div>
+      </div>
 
-  <div id="coachingPage" class="content-page" style="display: none;">
-      <h2>🧠 Coaching IA</h2>
-      <p style="text-align: center; color: #555;">Pose tes questions sur n'importe quel concept et obtiens une explication rapide.</p>
-      
-      <textarea placeholder="Ex: Explique-moi la différence entre l'inflation et la déflation." rows="4" style="width: 100%; padding: 15px; border-radius: 8px; border: 1px solid #BDC3C7; box-sizing: border-box; resize: none;"></textarea>
-      <button style="background-color: var(--error-color); margin-bottom: 20px;">Poser la question à l'IA</button>
-      
-      <p style="font-size: 0.9em; color: #7F8C8D; text-align: center;">*Note : Le coaching IA est une simulation pour l'instant.*</p>
-      <button onclick="changerPage('dashboard')">Retour à l'accueil</button>
-  </div>
+      <div class="admin-link">
+        <a href="admin.html"><button>🔐 Accès Administration</button></a>
+      </div>
 
-  <footer>Conçu par <strong>Gabby Umba</strong></footer>
+    </div> 
+
+    <div id="fichesPage" class="content-page" style="display: none;">
+        <h2>📄 Mes Fiches de Révision</h2>
+        <p style="text-align: center; color: #555;">Consolide tes connaissances par la lecture de fiches thématiques.</p>
+        
+        <h3 style="color: var(--primary-color);">Thèmes Disponibles :</h3>
+        <ul style="list-style-type: '👉'; padding-left: 20px;">
+          <li><span style="margin-left: 10px;">Géographie : Les grands fleuves africains</span></li>
+          <li><span style="margin-left: 10px;">Histoire : L'indépendance de la RDC</span></li>
+          <li><span style="margin-left: 10px;">Économie : Les principes de la microéconomie</span></li>
+        </ul>
+        <p style="font-size: 0.9em; margin-top: 25px; text-align: left; color: #7F8C8D;">💡 **Astuce :** Ces fiches sont directement liées aux questions des quiz.</p>
+        <button onclick="changerPage('dashboard')">Retour à l'accueil</button>
+    </div>
+
+    <div id="defisPage" class="content-page" style="display: none;">
+        <h2>🏆 Défis de la Semaine</h2>
+        <p style="text-align: center; color: #555;">Mesure-toi à d'autres étudiants de l'ISC Lwanga et grimpe dans le classement !</p>
+        
+        <h3 style="color: var(--primary-color);">Défi Actuel :</h3>
+        <p style="font-weight: bold; color: var(--text-dark); margin-bottom: 5px;">Challenge : Répondre correctement à 20 questions de Droit en moins de 5 minutes.</p>
+        <p style="font-weight: 700; color: var(--secondary-color); font-size: 1.1em; text-align: center;">Statut : Non commencé</p>
+        <p style="font-size: 0.9em; color: #7F8C8D; text-align: center;">Prochain défi disponible : demain à 18h00.</p>
+        <button onclick="changerPage('dashboard')">Retour à l'accueil</button>
+    </div>
+
+    <div id="coachingPage" class="content-page" style="display: none;">
+        <h2>🧠 Coaching IA</h2>
+        <p style="text-align: center; color: #555;">Pose tes questions sur n'importe quel concept et obtiens une explication rapide.</p>
+        
+        <textarea placeholder="Ex: Explique-moi la différence entre l'inflation et la déflation." rows="4" style="width: 100%; padding: 15px; border-radius: 8px; border: 1px solid #BDC3C7; box-sizing: border-box; resize: none;"></textarea>
+        <button style="background-color: var(--error-color); margin-bottom: 20px;">Poser la question à l'IA</button>
+        
+        <p style="font-size: 0.9em; color: #7F8C8D; text-align: center;">*Note : Le coaching IA est une simulation pour l'instant.*</p>
+        <button onclick="changerPage('dashboard')">Retour à l'accueil</button>
+    </div>
+
+  </div> <footer>Conçu avec passion par <strong>Gabby Umba — ISC Lwanga</strong></footer>
 
   <script>
-    // ⚠️ CONFIGURATION FIREBASE - NON MODIFIÉE
+    // ⚠️ CONFIGURATION FIREBASE (non modifiée)
     const firebaseConfig = {
       apiKey: "AIzaSyAuHPWVOkd96xPqKQ_K1cC4n4ihuPfuNFQ",
       authDomain: "abiga-1718.firebaseapp.com",
@@ -375,7 +408,6 @@
         }
     }
 
-
     // --- GESTION DU FILTRE DE MATIÈRE ---
 
     async function chargerMatieresDisponibles() {
@@ -415,15 +447,32 @@
     // --- FONCTION DE NAVIGATION ---
     
     function changerPage(pageId) {
-        const allPageContainers = document.querySelectorAll('#dashboardPage, .content-page');
-        
+        // Cacher les autres pages (fiches, défis, coaching)
+        const allPageContainers = document.querySelectorAll('.content-page');
         allPageContainers.forEach(page => {
             page.style.display = 'none';
         });
         
+        // Afficher la page ciblée ou le dashboard
         const targetPageElement = document.getElementById(pages[pageId]);
         if (targetPageElement) {
-            targetPageElement.style.display = 'block';
+            // Pour le dashboard (qui contient le quiz), on s'assure qu'il est visible
+            document.getElementById('dashboardPage').style.display = 'block';
+            if (pageId !== 'dashboard' && pageId !== 'quiz') {
+                // Si on va sur une page de contenu, on cache les éléments principaux du quiz
+                document.getElementById('quizContainer').style.display = 'none';
+                document.querySelector('.quiz-filter').style.display = 'none';
+                document.getElementById('fichesPage').style.display = 'none';
+                document.getElementById('defisPage').style.display = 'none';
+                document.getElementById('coachingPage').style.display = 'none';
+
+                // Afficher la page spécifique
+                document.getElementById(pageId + 'Page').style.display = 'block';
+            } else {
+                // Si on retourne au dashboard/quiz
+                document.getElementById('quizContainer').style.display = 'block';
+                document.querySelector('.quiz-filter').style.display = 'block';
+            }
         }
         
         if (pageId === 'quiz') {
@@ -432,7 +481,7 @@
     }
 
 
-    // --- FONCTIONS DU QUIZ AVEC FILTRE ---
+    // --- FONCTIONS DU QUIZ AVEC FILTRE (Correction pour la Répétition) ---
 
     async function chargerQuiz() {
       const container = document.getElementById("quizContainer");
@@ -458,12 +507,15 @@
             toutesLesQuestions.push({ id: doc.id, ...doc.data() }); 
         });
 
+        // 1. Mélanger le tableau de questions
         toutesLesQuestions.sort(() => Math.random() - 0.5); 
         
+        // 2. Sélectionner les X premières questions UNIQUES
         questionsDuJour = toutesLesQuestions.slice(0, MAX_QUESTIONS);
         questionsReussies.clear(); 
         essais = {}; 
 
+        // Important: Vider le conteneur AVANT d'ajouter les nouvelles questions
         container.innerHTML = ""; 
         
         if (questionsDuJour.length === 0) {
@@ -471,6 +523,7 @@
             return;
         }
 
+        // 3. Afficher les questions sélectionnées
         questionsDuJour.forEach(data => {
           const safeExplication = data.explication ? data.explication.replace(/'/g, "\\'") : '';
           const safeReponses = data.bonneReponse ? data.bonneReponse.replace(/'/g, "\\'") : '';
@@ -494,7 +547,7 @@
     }
 
     /**
-     * Vérifie la réponse du quiz et fournit un feedback visuel.
+     * Vérifie la réponse du quiz et fournit un feedback visuel. (Non modifié)
      */
     function verifierReponse(element, reponse, bonneReponse, explication, questionId) {
         if (!essais[questionId]) essais[questionId] = 0;
@@ -515,7 +568,7 @@
         
         // Si la réponse est correcte
         if (reponse.trim() === bonneReponse.trim()) {
-            element.style.backgroundColor = 'rgb(37, 211, 102)'; /* Utiliser les couleurs directes pour le JS */
+            element.style.backgroundColor = 'rgb(37, 211, 102)'; 
             element.style.boxShadow = '0 0 10px rgba(37, 211, 102, 0.5)';
             explicationDiv.style.borderLeftColor = 'var(--secondary-color)';
             
