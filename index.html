@@ -3,12 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Prépa+ — Révise avec fierté</title>
+  <title>Prépa+ — Révise avec clarté</title>
 
-  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Open+Sans&display=swap" rel="stylesheet" />
 
-  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore-compat.js"></script>
 
@@ -60,7 +58,20 @@
       cursor: pointer;
       transition: all 0.3s ease;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      /* Icônes pour les boutons (inspiré de l'image) */
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
+
+    .grid button:before {
+        margin-right: 8px;
+        font-weight: bold;
+    }
+    .grid button:nth-child(1):before { content: '📚'; }
+    .grid button:nth-child(2):before { content: '📄'; }
+    .grid button:nth-child(3):before { content: '🏆'; }
+    .grid button:nth-child(4):before { content: '🧠'; }
 
     .grid button:hover {
       background-color: #1a252f;
@@ -116,12 +127,37 @@
       border: none;
       border-radius: 6px;
       cursor: pointer;
-      transition: background-color 0.2s ease;
+      transition: background-color 0.2s ease, transform 0.1s ease;
     }
 
     .page button:hover {
       background-color: #1a252f;
     }
+
+    /* NOUVEAUX STYLES POUR LE FEEDBACK VISUEL */
+    .page button:disabled {
+        opacity: 0.6;
+        cursor: default;
+        transition: none; /* Empêche les transitions sur l'opacité */
+    }
+    
+    .explication {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 5px;
+      line-height: 1.4;
+      font-size: 0.95em;
+      background-color: #f4f6f8;
+      color: #2c3e50;
+      text-align: left;
+      border-left: 5px solid #2c3e50; /* Style élégant */
+    }
+    
+    .explication strong {
+        font-weight: bold;
+        color: #1a252f;
+    }
+
 
     .admin-link {
       margin-top: 30px;
@@ -159,16 +195,16 @@
   <div class="slogan">Révise avec clarté. Progresse avec fierté.</div>
 
   <div class="grid">
-    <button onclick="chargerQuiz()">📚 Quiz</button>
-    <button onclick="alert('Fiches à venir')">📄 Fiches</button>
-    <button onclick="alert('Défis à venir')">🏆 Défis</button>
-    <button onclick="alert('Coaching IA à venir')">🧠 Coaching IA</button>
+    <button onclick="chargerQuiz()">Quiz</button>
+    <button onclick="alert('Fiches à venir')">Fiches</button>
+    <button onclick="alert('Défis à venir')">Défis</button>
+    <button onclick="alert('Coaching IA à venir')">Coaching IA</button>
   </div>
 
   <div class="progress">
     <div class="progress-bar" id="progressBar"></div>
   </div>
-  <p>Tu as révisé <strong>12%</strong> cette semaine</p>
+  <p>Tu as révisé <strong id="progressText">12%</strong> cette semaine</p>
 
   <div class="quote">“Ton avenir mérite ton attention aujourd’hui.”</div>
 
@@ -181,6 +217,7 @@
   <footer>Conçu avec passion par <strong>Gabby Umba — ISC Lwanga</strong></footer>
 
   <script>
+    // ⚠️ IMPORTANT: Votre clé est exposée ici. Pensez à sécuriser vos règles Firestore !
     const firebaseConfig = {
       apiKey: "AIzaSyAuHPWVOkd96xPqKQ_K1cC4n4ihuPfuNFQ",
       authDomain: "abiga-1718.firebaseapp.com",
@@ -195,49 +232,126 @@
 
     window.onload = () => {
       document.getElementById("progressBar").style.width = "12%";
+      document.getElementById("progressText").textContent = "12%";
     };
 
-    let essais = {};
+    let essais = {}; // Compteur d'essais pour chaque question
 
-    function verifierReponse(reponse, bonneReponse, explication, questionId) {
-      if (!essais[questionId]) essais[questionId] = 0;
-      essais[questionId]++;
+    /**
+     * Vérifie la réponse du quiz et fournit un feedback visuel.
+     * @param {HTMLElement} element - Le bouton sur lequel l'utilisateur a cliqué.
+     * @param {string} reponse - La réponse sélectionnée.
+     * @param {string} bonneReponse - La bonne réponse attendue.
+     * @param {string} explication - L'explication à afficher.
+     * @param {string} questionId - L'ID unique de la question.
+     */
+    function verifierReponse(element, reponse, bonneReponse, explication, questionId) {
+        if (!essais[questionId]) essais[questionId] = 0;
+        essais[questionId]++;
 
-      if (reponse === bonneReponse) {
-        alert("✅ Bonne réponse !\n\n" + explication);
-        essais[questionId] = 0;
-      } else if (essais[questionId] >= 3) {
-        alert("❌ Mauvaise réponse.\n\n📘 Explication : " + explication);
-        essais[questionId] = 0;
-      } else {
-        alert("❌ Mauvaise réponse. Essaie encore !");
-      }
+        const parentDiv = element.closest('.page');
+        const optionsButtons = parentDiv.querySelectorAll('button');
+        let explicationDiv = parentDiv.querySelector('.explication');
+
+        // Créer la zone d'explication si elle n'existe pas
+        if (!explicationDiv) {
+            explicationDiv = document.createElement('div');
+            explicationDiv.className = 'explication';
+            parentDiv.appendChild(explicationDiv);
+        }
+
+        explicationDiv.style.display = 'block'; // S'assurer que la zone est visible
+        explicationDiv.style.backgroundColor = '#f4f6f8'; // Couleur par défaut
+
+        // Désactiver TOUS les boutons immédiatement pour éviter de tricher après un essai
+        optionsButtons.forEach(btn => btn.disabled = true);
+        
+        // Si la réponse est correcte
+        if (reponse === bonneReponse) {
+            element.style.backgroundColor = '#25D366'; // Vert
+            element.style.boxShadow = '0 0 10px rgba(37, 211, 102, 0.5)';
+            explicationDiv.style.borderLeftColor = '#25D366';
+            
+            explicationDiv.innerHTML = `✅ **Bonne réponse !**<br> ${explication}`;
+            
+            // Logique de progression à ajouter ici plus tard
+            // updateProgress(1); 
+            
+            essais[questionId] = 0; // Marquer comme réussi
+        } 
+        // Si la réponse est incorrecte
+        else {
+            element.style.backgroundColor = '#E57373'; // Rouge
+            
+            // Si c'est le dernier essai (après 3 tentatives, on donne la réponse)
+            if (essais[questionId] >= 3) {
+                // Montrer la bonne réponse en vert
+                optionsButtons.forEach(btn => {
+                    if (btn.textContent.trim() === bonneReponse.trim()) {
+                        btn.style.backgroundColor = '#25D366';
+                        btn.style.opacity = 1; // Rendre plus visible
+                    }
+                });
+                
+                explicationDiv.style.borderLeftColor = '#E57373';
+                explicationDiv.innerHTML = `❌ **Fin des essais.**<br>La bonne réponse était : **${bonneReponse}**.<br>📘 Explication : ${explication}`;
+                essais[questionId] = 0; // Réinitialiser
+                
+            } else {
+                // Tentative incorrecte - permettre d'essayer une autre option
+                optionsButtons.forEach(btn => btn.disabled = false); // Réactiver TOUS les boutons
+                element.disabled = true; // Désactiver l'option sélectionnée seulement
+                
+                explicationDiv.style.borderLeftColor = '#E57373';
+                explicationDiv.innerHTML = `❌ Mauvaise réponse. Essaie encore (Tentative ${essais[questionId]} / 3)`;
+            }
+        }
     }
 
+    /**
+     * Charge les questions du quiz depuis Firebase et les affiche.
+     */
     async function chargerQuiz() {
       const container = document.getElementById("quizContainer");
-      container.innerHTML = "";
+      container.innerHTML = "Chargement des questions...";
 
-      const snapshot = await db.collection("quizzes").get();
-      const questionsDéjàAffichées = new Set();
+      try {
+        const snapshot = await db.collection("quizzes").get();
+        container.innerHTML = ""; // Vider après chargement
 
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        const id = doc.id;
+        if (snapshot.empty) {
+             container.innerHTML = "Aucune question de quiz trouvée dans la base de données.";
+             return;
+        }
 
-        if (questionsDéjàAffichées.has(data.question)) return;
-        questionsDéjàAffichées.add(data.question);
+        const questionsDéjàAffichées = new Set();
+        
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const id = doc.id;
 
-        const div = document.createElement('div');
-        div.className = 'page';
-        div.innerHTML = `
-          <h3>${data.question}</h3>
-          ${data.options.map(opt => `
-            <button onclick="verifierReponse('${opt}', '${data.bonneReponse}', \`${data.explication}\`, '${id}')">${opt}</button>
-          `).join('')}
-        `;
-        container.appendChild(div);
-      });
+          // Simple vérification pour éviter d'afficher le même contenu si plusieurs docs ont la même question
+          if (questionsDéjàAffichées.has(data.question)) return;
+          questionsDéjàAffichées.add(data.question);
+
+          // On gère les apostrophes dans la chaîne de caractères passée à la fonction JS
+          const safeExplication = data.explication ? data.explication.replace(/'/g, "\\'") : '';
+
+          const div = document.createElement('div');
+          div.className = 'page';
+          div.innerHTML = `
+            <h3>${data.question}</h3>
+            ${data.options.map(opt => `
+              <button onclick="verifierReponse(this, '${opt.replace(/'/g, "\\'")}', '${data.bonneReponse.replace(/'/g, "\\'")}', \`${safeExplication}\`, '${id}')">${opt}</button>
+            `).join('')}
+            `;
+          container.appendChild(div);
+        });
+
+      } catch (error) {
+        console.error("Erreur lors du chargement des quizzes : ", error);
+        container.innerHTML = "Erreur de connexion à la base de données.";
+      }
     }
   </script>
 </body>
