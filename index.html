@@ -5,7 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Prépa+ — Révise avec fierté</title>
 
+  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Open+Sans&display=swap" rel="stylesheet" />
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore-compat.js"></script>
+
   <style>
     body {
       font-family: 'Open Sans', sans-serif;
@@ -80,6 +86,37 @@
       color: #666;
     }
 
+    .page {
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 10px auto;
+      width: 90%;
+      text-align: left;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .page h3 {
+      margin-bottom: 10px;
+    }
+
+    .page button {
+      display: block;
+      margin: 5px 0;
+      padding: 10px;
+      width: 100%;
+      background-color: #2c3e50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .page button:hover {
+      background-color: #1a252f;
+    }
+
     footer {
       margin-top: 40px;
       font-size: 0.9em;
@@ -93,7 +130,7 @@
   <div class="slogan">Révise avec clarté. Progresse avec fierté.</div>
 
   <div class="grid">
-    <button onclick="alert('Quiz à venir')">📚 Quiz</button>
+    <button onclick="chargerQuiz()">📚 Quiz</button>
     <button onclick="alert('Fiches à venir')">📄 Fiches</button>
     <button onclick="alert('Défis à venir')">🏆 Défis</button>
     <button onclick="alert('Coaching IA à venir')">🧠 Coaching IA</button>
@@ -106,13 +143,61 @@
 
   <div class="quote">“Ton avenir mérite ton attention aujourd’hui.”</div>
 
+  <div id="quizContainer"></div>
+
   <footer>Conçu par <strong>Gabby Umba — ISC Lwanga</strong></footer>
 
   <script>
-    // Animation de la barre de progression
+    // Initialisation Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyAuHPWVOkd96xPqKQ_K1cC4n4ihuPfuNFQ",
+      authDomain: "abiga-1718.firebaseapp.com",
+      projectId: "abiga-1718",
+      storageBucket: "abiga-1718.appspot.com",
+      messagingSenderId: "103455679291",
+      appId: "1:103455679291:web:eda13441fedfce226d4d1e"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Barre de progression
     window.onload = function() {
       document.getElementById("progressBar").style.width = "12%";
     };
+
+    // Charger les quiz
+    async function chargerQuiz() {
+      const container = document.getElementById("quizContainer");
+      container.innerHTML = "";
+
+      const snapshot = await db.collection("quizzes")
+        .where("matière", "==", "Mathématiques")
+        .where("niveau", "==", "Facile")
+        .get();
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const div = document.createElement('div');
+        div.className = 'page';
+        div.innerHTML = `
+          <h3>${data.question}</h3>
+          ${data.options.map(opt => `
+            <button onclick="verifierReponse('${opt}', '${data.bonneReponse}', \`${data.explication}\`)">${opt}</button>
+          `).join('')}
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // Vérifier la réponse
+    function verifierReponse(reponse, bonneReponse, explication) {
+      if (reponse === bonneReponse) {
+        alert("✅ Bonne réponse !\n\n" + explication);
+      } else {
+        alert("❌ Mauvaise réponse.\n\n" + explication);
+      }
+    }
   </script>
 </body>
 </html>
