@@ -180,33 +180,65 @@
 
   <footer>Conçu avec passion par <strong>Gabby Umba — ISC Lwanga</strong></footer>
 
- <script>
-  async function chargerQuiz() {
-    const container = document.getElementById("quizContainer");
-    container.innerHTML = ""; // 🔄 Nettoie le conteneur avant d’ajouter
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAuHPWVOkd96xPqKQ_K1cC4n4ihuPfuNFQ",
+      authDomain: "abiga-1718.firebaseapp.com",
+      projectId: "abiga-1718",
+      storageBucket: "abiga-1718.appspot.com",
+      messagingSenderId: "103455679291",
+      appId: "1:103455679291:web:eda13441fedfce226d4d1e"
+    };
 
-    const snapshot = await db.collection("quizzes").get();
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-    const questionsDéjàAffichées = new Set(); // 🧠 Pour éviter les doublons
+    window.onload = () => {
+      document.getElementById("progressBar").style.width = "12%";
+    };
 
-    snapshot.forEach(doc => {
-      const data = doc.data();
+    let essais = {};
 
-      if (questionsDéjàAffichées.has(data.question)) return; // ⛔ Ignore les doublons
-      questionsDéjàAffichées.add(data.question);
+    function verifierReponse(reponse, bonneReponse, explication, questionId) {
+      if (!essais[questionId]) essais[questionId] = 0;
+      essais[questionId]++;
 
-      const div = document.createElement('div');
-      div.className = 'page';
-      div.innerHTML = `
-        <h3>${data.question}</h3>
-        ${data.options.map(opt => `
-          <button onclick="verifierReponse('${opt}', '${data.bonneReponse}', \`${data.explication}\`)">${opt}</button>
-        `).join('')}
-      `;
-      container.appendChild(div);
-    });
-  }
-</script>
+      if (reponse === bonneReponse) {
+        alert("✅ Bonne réponse !\n\n" + explication);
+        essais[questionId] = 0;
+      } else if (essais[questionId] >= 3) {
+        alert("❌ Mauvaise réponse.\n\n📘 Explication : " + explication);
+        essais[questionId] = 0;
+      } else {
+        alert("❌ Mauvaise réponse. Essaie encore !");
+      }
+    }
 
+    async function chargerQuiz() {
+      const container = document.getElementById("quizContainer");
+      container.innerHTML = "";
+
+      const snapshot = await db.collection("quizzes").get();
+      const questionsDéjàAffichées = new Set();
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const id = doc.id;
+
+        if (questionsDéjàAffichées.has(data.question)) return;
+        questionsDéjàAffichées.add(data.question);
+
+        const div = document.createElement('div');
+        div.className = 'page';
+        div.innerHTML = `
+          <h3>${data.question}</h3>
+          ${data.options.map(opt => `
+            <button onclick="verifierReponse('${opt}', '${data.bonneReponse}', \`${data.explication}\`, '${id}')">${opt}</button>
+          `).join('')}
+        `;
+        container.appendChild(div);
+      });
+    }
+  </script>
 </body>
 </html>
