@@ -35,7 +35,7 @@
       margin-top: 5px;
       border-radius: 6px;
       border: 1px solid #ccc;
-      box-sizing: border-box; /* Important pour le padding */
+      box-sizing: border-box;
     }
     button {
       margin-top: 20px;
@@ -93,7 +93,7 @@
         width: auto;
         padding: 5px 10px;
         margin-top: 5px;
-        background-color: #e74c3c;
+        margin-right: 5px;
         font-size: 0.8em;
     }
   </style>
@@ -115,7 +115,7 @@
   </div>
 
   <div id="formulaire" style="display: none;">
-    <h2>➕ Ajouter un Quiz</h2>
+    <h2 id="formTitle">➕ Ajouter un Quiz</h2>
 
     <label for="matiere">Matière</label>
     <input type="text" id="matiere" placeholder="Ex: Histoire" />
@@ -135,9 +135,11 @@
     <label for="explication">Explication</label>
     <textarea id="explication" rows="3" placeholder="Ex: Elle a commencé en 1789 avec la prise de la Bastille."></textarea>
 
-    <button onclick="ajouterQuiz()">Ajouter le quiz</button>
+    <button id="mainFormButton" onclick="ajouterQuiz()">Ajouter le quiz</button>
+    
     <div id="feedbackMessage" style="display: none;"></div>
-    <button onclick="deconnexion()">Se déconnecter</button>
+    
+    <button onclick="deconnexion()" style="background-color: #888; margin-top: 10px;">Se déconnecter</button>
   </div>
   
   <div id="listeQuizzes" style="display: none;">
@@ -159,21 +161,24 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
-    
-    // --- FONCTIONS D'AUTHENTIFICATION (SÉCURITÉ) ---
+
+    let quizEnEditionId = null; // Variable pour suivre l'ID du quiz en cours de modification
+
+    // --- LOGIQUE D'AUTHENTIFICATION ---
 
     auth.onAuthStateChanged(user => {
         if (user) {
-            // Utilisateur connecté : afficher l'interface admin
+            // Utilisateur connecté
             document.getElementById("authSection").style.display = "none";
             document.getElementById("formulaire").style.display = "block";
             document.getElementById("listeQuizzes").style.display = "block";
             chargerListeQuizzes();
         } else {
-            // Utilisateur déconnecté : afficher la connexion
+            // Utilisateur déconnecté
             document.getElementById("authSection").style.display = "block";
             document.getElementById("formulaire").style.display = "none";
             document.getElementById("listeQuizzes").style.display = "none";
+            quizEnEditionId = null; // S'assurer que le mode édition est désactivé
         }
     });
 
@@ -185,9 +190,6 @@
 
         try {
             await auth.signInWithEmailAndPassword(email, password);
-            authMsg.className = "success";
-            authMsg.innerText = "Connexion réussie !";
-            authMsg.style.display = "block";
         } catch (error) {
             authMsg.className = "error";
             authMsg.innerText = "Erreur de connexion : Vérifiez l'email/mot de passe.";
@@ -202,7 +204,20 @@
         document.getElementById("feedbackMessage").style.display = "none";
     }
 
-    // --- FONCTIONS DE GESTION DU QUIZ ---
+    // --- FONCTIONS DE GESTION DU FORMULAIRE (Ajout/Modification) ---
+
+    // Fonction principale appelée par le bouton du formulaire
+    function gererSoumissionQuiz() {
+        if (quizEnEditionId) {
+            modifierQuiz(quizEnEditionId);
+        } else {
+            ajouterQuiz();
+        }
+    }
+    
+    // Assurez-vous que le bouton appelle la fonction de gestion
+    document.getElementById("mainFormButton").onclick = gererSoumissionQuiz;
+
 
     async function ajouterQuiz() {
       const matiere = document.getElementById("matiere").value.trim();
@@ -232,22 +247,14 @@
           options: options,
           bonneReponse: bonneReponse,
           explication: explication,
-          dateAjout: firebase.firestore.FieldValue.serverTimestamp() // Ajout d'un horodatage
+          dateAjout: firebase.firestore.FieldValue.serverTimestamp()
         });
 
         feedback.className = "success";
         feedback.innerText = "✅ Quiz ajouté avec succès !";
         feedback.style.display = "block";
-
-        // Vider les champs
-        document.getElementById("matiere").value = "";
-        document.getElementById("niveau").value = "";
-        document.getElementById("question").value = "";
-        document.getElementById("options").value = "";
-        document.getElementById("bonneReponse").value = "";
-        document.getElementById("explication").value = "";
         
-        chargerListeQuizzes(); // Mettre à jour la liste
+        reinitialiserFormulaire();
         
       } catch (error) {
         feedback.className = "error";
@@ -256,12 +263,84 @@
         console.error("Erreur Firestore :", error);
       }
     }
-    
+
+    async function modifierQuiz(id) {
+        const matiere = document.getElementById("matiere").value.trim();
+        const niveau = document.getElementById("niveau").value.trim();
+        const question = document.getElementById("question").value.trim();
+        const optionsRaw = document.getElementById("options").value.trim();
+        const bonneReponse = document.getElementById("bonneReponse").value.trim();
+        const explication = document.getElementById("explication").value.trim();
+        const feedback = document.getElementById("feedbackMessage");
+        
+        feedback.style.display = "none";
+
+        const options = optionsRaw.split(',').map(opt => opt.trim()).filter(opt => opt);
+
+        if (!matiere || !niveau || !question || options.length < 2 || !bonneReponse || !explication) {
+            feedback.className = "error";
+            feedback.innerText = "🛑 Remplis tous les champs correctement.";
+            feedback.style.display = "block";
+            return;
+        }
+
+        try {
+            await db.collection("quizzes").doc(id).update({
+              matière: matiere,
+              niveau: niveau,
+              question: question,
+              options: options,
+              bonneReponse: bonneReponse,
+              explication: explication
+            });
+
+            feedback.className = "success";
+            feedback.innerText = "✅ Quiz modifié avec succès !";
+            feedback.style.display = "block";
+
+            reinitialiserFormulaire();
+            
+        } catch (error) {
+            feedback.className = "error";
+            feedback.innerText = "❌ Erreur lors de la modification : " + error.message;
+            feedback.style.display = "block";
+            console.error("Erreur Firestore :", error);
+        }
+    }
+
+    function reinitialiserFormulaire() {
+        // Vider les champs
+        document.getElementById("matiere").value = "";
+        document.getElementById("niveau").value = "";
+        document.getElementById("question").value = "";
+        document.getElementById("options").value = "";
+        document.getElementById("bonneReponse").value = "";
+        document.getElementById("explication").value = "";
+
+        // Revenir au mode 'Ajouter'
+        quizEnEditionId = null;
+        document.getElementById("formTitle").textContent = "➕ Ajouter un Quiz";
+        document.getElementById("mainFormButton").textContent = "Ajouter le quiz";
+
+        // Supprimer le bouton 'Annuler' si présent
+        const cancelButton = document.getElementById('cancelEditBtn');
+        if (cancelButton) {
+            cancelButton.remove();
+        }
+        
+        document.getElementById("feedbackMessage").style.display = "none";
+        chargerListeQuizzes(); // Rafraîchir la liste
+    }
+
+
+    // --- FONCTIONS DE GESTION DE LA LISTE ---
+
     async function chargerListeQuizzes() {
         const container = document.getElementById("quizzesContainer");
         container.innerHTML = "Chargement des questions...";
 
         try {
+            // Ordonner par date d'ajout pour voir les plus récents en premier
             const snapshot = await db.collection("quizzes").orderBy("dateAjout", "desc").get();
             container.innerHTML = "";
             
@@ -280,7 +359,8 @@
                     <strong>[${data.matière} - ${data.niveau}] Question :</strong> ${data.question}<br>
                     Réponse : ${data.bonneReponse}<br>
                     Options : ${data.options.join(', ')}
-                    <button onclick="supprimerQuiz('${id}')">Supprimer</button>
+                    <button onclick="chargerPourModification('${id}')" style="background-color: #3498db;">Modifier</button>
+                    <button onclick="supprimerQuiz('${id}')" style="background-color: #e74c3c;">Supprimer</button>
                 `;
                 container.appendChild(item);
             });
@@ -290,9 +370,47 @@
             console.error("Erreur de chargement des quizzes :", error);
         }
     }
+
+    async function chargerPourModification(id) {
+        const doc = await db.collection("quizzes").doc(id).get();
+        if (!doc.exists) {
+            alert("Ce quiz n'existe plus !");
+            return;
+        }
+        
+        const data = doc.data();
+        
+        // Remplir le formulaire avec les données
+        document.getElementById("matiere").value = data.matière;
+        document.getElementById("niveau").value = data.niveau;
+        document.getElementById("question").value = data.question;
+        document.getElementById("options").value = data.options.join(', ');
+        document.getElementById("bonneReponse").value = data.bonneReponse;
+        document.getElementById("explication").value = data.explication;
+
+        // Passer en mode 'Modification'
+        quizEnEditionId = id;
+        document.getElementById("formTitle").textContent = "✏️ Modifier un Quiz";
+        document.getElementById("mainFormButton").textContent = "Enregistrer les modifications";
+        
+        // Ajouter un bouton 'Annuler' si non présent
+        if (!document.getElementById('cancelEditBtn')) {
+            const cancelButton = document.createElement('button');
+            cancelButton.id = 'cancelEditBtn';
+            cancelButton.textContent = 'Annuler la modification';
+            cancelButton.style.backgroundColor = '#888';
+            cancelButton.onclick = reinitialiserFormulaire;
+            // Insérer juste avant le bouton de déconnexion
+            document.getElementById('formulaire').insertBefore(cancelButton, document.getElementById('feedbackMessage'));
+        }
+
+        // Défiler vers le haut pour voir le formulaire
+        window.scrollTo(0, 0); 
+        document.getElementById("feedbackMessage").style.display = "none";
+    }
     
     async function supprimerQuiz(id) {
-        if (!confirm("Êtes-vous sûr de vouloir supprimer ce quiz ?")) {
+        if (!confirm("Êtes-vous sûr de vouloir supprimer définitivement ce quiz ?")) {
             return;
         }
         
