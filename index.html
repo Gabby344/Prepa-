@@ -54,8 +54,8 @@
         left: 0;
         width: 100%;
         height: 100%;
-        /* 🎨 CORRECTION : Réduction de l'opacité à 0.5 pour rendre l'image plus visible */
-        background: rgba(240, 244, 247, 0.5); 
+        /* 🎨 AMÉLIORÉ : Filtre plus sombre pour mieux faire ressortir les cartes et le texte */
+        background: rgba(0, 0, 0, 0.45); 
         z-index: -1;
     }
     
@@ -76,15 +76,17 @@
       font-family: 'Playfair Display', serif;
       font-size: 3em;
       margin-top: 10px;
-      color: var(--primary-color);
+      color: var(--card-bg); /* Changé pour être lisible sur l'overlay */
       font-weight: 700;
+      text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
     }
 
     .slogan {
       font-style: italic;
       font-size: 1.1em;
       margin-bottom: 40px;
-      color: #7F8C8D;
+      color: #D5DBDB; /* Couleur claire pour lisibilité */
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
     }
 
     /* NAVIGATION GRID */
@@ -116,15 +118,18 @@
       box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
     }
 
+    /* --- AMÉLIORATIONS CSS À PARTIR DE LA PROGRESSION --- */
+
     /* PROGRESSION */
     .progress {
-      margin: 20px auto;
+      margin: 20px auto 10px; /* Rapprochement du texte */
       width: 90%;
       max-width: 500px;
       background-color: #ECF0F1; 
-      border-radius: 15px;
+      border-radius: 20px; /* Plus arrondi */
       overflow: hidden;
-      height: 25px; 
+      height: 15px; /* Plus fin */
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
     .progress-bar {
@@ -132,15 +137,32 @@
       width: 0%; 
       background-color: var(--secondary-color);
       transition: width 1s ease-in-out;
-      border-radius: 15px 0 0 15px;
-      box-shadow: inset 0 -1px 1px rgba(0, 0, 0, 0.1);
+      border-radius: 20px 0 0 20px;
+      box-shadow: none; /* Look moderne et plat */
     }
 
+    /* Texte de Progression */
+    .progress-status {
+      /* Nouveau style pour garantir la lisibilité sur l'image */
+      background: rgba(255, 255, 255, 0.9); 
+      padding: 5px 15px;
+      border-radius: 8px;
+      display: inline-block; 
+      margin-top: 0; 
+      font-size: 1.05em;
+      font-weight: 700; 
+      color: var(--primary-color);
+      margin-bottom: 5px;
+    }
+
+    /* Citation (Proverbe) */
     .quote {
-      margin: 30px auto;
+      margin: 15px auto 35px; 
       max-width: 500px;
       font-size: 1.05em;
-      color: #7F8C8D;
+      font-style: italic;
+      color: var(--card-bg); /* Couleur claire sur l'overlay sombre */
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); /* Ombre pour contraste */
       padding: 0 10px;
     }
 
@@ -154,90 +176,121 @@
       width: 95%;
       max-width: 500px;
       text-align: left;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15); 
+      /* Ombre plus professionnelle */
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); 
     }
     
     #quizContainer .page {
-        margin-bottom: 15px;
-        padding-top: 15px;
-        padding-bottom: 15px;
+        margin: 0 auto 25px; /* Ajusté pour séparer les questions */
+        padding: 30px; 
+    }
+
+    /* Texte d'instruction au début du Quiz */
+    #quizContainer .page[style*="text-align: center"] {
+        font-size: 1.1em;
+        line-height: 1.6;
+        color: var(--text-dark);
+        font-weight: 400;
     }
     
     .page h3 {
-      margin-bottom: 15px;
-      font-size: 1.15em;
+      margin-bottom: 20px;
+      font-size: 1.25em; /* Question plus grande */
       color: var(--text-dark);
       font-weight: 700;
       line-height: 1.4;
     }
 
+    /* Boutons de réponse (Options) */
     .page button {
       display: block;
       margin: 8px 0;
-      padding: 12px;
+      padding: 15px 15px; /* Augmenter la zone de clic */
       width: 100%;
-      background-color: #EAECEE; 
+      background-color: #F8F9FA; /* Fond plus clair */
       color: var(--text-dark);
-      border: 1px solid #D5DBDB;
-      border-radius: 8px;
+      border: 1px solid #EAECEE;
+      border-radius: 10px;
       cursor: pointer;
       transition: background-color 0.2s ease, transform 0.1s ease, border-color 0.2s;
       text-align: left;
       font-size: 1em;
-      font-weight: 400;
+      font-weight: 500;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     }
 
     .page button:hover:not([disabled]) {
-      background-color: #DDE2E7;
+      background-color: #E5E7E9;
       border-color: var(--primary-color);
     }
+
+    /* Style du feedback (explication) */
+    .explication {
+        margin-top: 15px;
+        padding: 15px;
+        border-left: 5px solid; /* Couleur définie par JS (success/error) */
+        background-color: #F8F9FA; 
+        border-radius: 0 8px 8px 0;
+        font-size: 0.95em;
+        line-height: 1.5;
+        text-align: left;
+    }
     
-    /* FILTRE */
+    /* FILTRE QUIZ (Carte Améliorée) */
     .quiz-filter {
         text-align: center;
-        margin-bottom: 25px;
-        padding: 15px;
+        padding: 25px; /* Augmenté */
         background-color: var(--card-bg);
-        border-radius: 12px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        border-radius: 15px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15); /* Cohérence avec les cartes */
         max-width: 500px;
         margin: 0 auto 25px;
     }
 
-    .quiz-filter label, .quiz-filter select {
-        font-size: 1em;
+    .quiz-filter label {
+        display: block; 
+        font-size: 0.95em;
         font-weight: 600;
-        color: var(--text-dark);
+        color: #7F8C8D; 
+        margin-bottom: 8px;
+        text-align: left;
     }
 
     .quiz-filter select {
-        padding: 10px 12px;
-        border-radius: 8px;
+        display: block;
+        width: 100%; /* Pleine largeur */
+        padding: 12px 15px; 
+        border-radius: 10px;
         border: 1px solid #BDC3C7;
-        margin-left: 10px;
-        cursor: pointer;
-        width: 150px;
+        margin-left: 0; 
+        margin-bottom: 20px;
         background-color: #F8F9FA;
+        font-size: 1em;
+        color: var(--text-dark);
     }
+    
+    /* Bouton Lancer le Quiz */
     .quiz-filter button {
-        width: auto; 
-        margin-top: 15px; 
-        padding: 10px 20px; 
+        width: 100%; 
+        padding: 15px 20px; 
         background-color: var(--secondary-color); 
         color: white;
         border: none;
-        border-radius: 8px;
+        border-radius: 10px;
+        font-weight: 700;
         transition: background-color 0.2s;
+        /* Ombre pour le bouton d'action principal */
+        box-shadow: 0 4px 10px rgba(46, 204, 113, 0.4); 
     }
     .quiz-filter button:hover {
       background-color: #27AE60;
       transform: none; 
     }
     
-    /* BOUTON ADMIN (Plus Grand et Centré) */
+    /* BOUTON ADMIN (Secondaire et Décentré) */
     .admin-link {
-      margin-top: 40px;
-      padding-bottom: 40px; 
+      margin-top: 50px;
+      padding-bottom: 50px; 
     }
 
     .admin-link a {
@@ -246,21 +299,23 @@
 
     .admin-link button {
       padding: 15px 30px; 
-      background-color: #95A5A6; 
+      /* Couleur secondaire/neutre */
+      background-color: #BDC3C7; 
       color: white;
       border: none;
-      border-radius: 10px;
-      font-size: 1.1em; 
+      border-radius: 12px;
+      font-size: 1em; 
       font-weight: 600;
       cursor: pointer;
       transition: background-color 0.2s ease, transform 0.1s ease;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      width: 80%; 
-      max-width: 350px;
+      /* Ombre subtile */
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      width: 70%; 
+      max-width: 300px;
     }
     .admin-link button:hover {
-      background-color: #7F8C8D;
-      transform: translateY(-2px);
+      background-color: #95A5A6;
+      transform: translateY(-1px);
     }
 
     footer {
@@ -271,6 +326,7 @@
       font-weight: 600;
       background-color: rgba(255, 255, 255, 0.8); 
       margin-top: auto; 
+      z-index: 10;
     }
   </style>
 </head>
@@ -294,7 +350,7 @@
       <div class="progress">
         <div class="progress-bar" id="progressBar"></div>
       </div>
-      <p style="font-weight: 600; color: var(--text-dark);">Tu as révisé <strong id="progressText">12%</strong> cette semaine</p>
+      <p class="progress-status">Tu as révisé <strong id="progressText">0%</strong> cette semaine</p>
 
       <div class="quote">“Ton avenir mérite ton attention aujourd’hui.” — Proverbe Africain</div>
       
@@ -307,8 +363,8 @@
       </div>
 
       <div id="quizContainer">
-          <div class="page" style="text-align: center; padding: 40px; color: #555;">
-              Sélectionne une matière ou clique sur "Lancer le Quiz" pour commencer ta session de révision !
+          <div class="page" style="text-align: center; padding: 40px;">
+              <strong>Sélectionne une matière</strong> ou clique sur le bouton <strong>"Lancer le Quiz"</strong> pour commencer ta session de révision !
           </div>
       </div>
 
@@ -439,8 +495,7 @@
     }
     
     function changerMatiere() {
-        // 🗑️ CORRECTION DU BUG DE RÉPÉTITION : 
-        // L'appel à chargerQuiz() a été retiré ici pour s'assurer qu'il n'est déclenché que par le bouton.
+        // Aucune action ici, le quiz est lancé par le bouton
     }
 
     // --- FONCTION DE NAVIGATION ---
@@ -462,11 +517,6 @@
             document.getElementById('quizContainer').style.display = 'block';
             document.querySelector('.quiz-filter').style.display = 'block';
         }
-        
-        if (pageId === 'quiz') {
-            // 🗑️ CORRECTION DU BUG DE RÉPÉTITION : 
-            // L'appel à chargerQuiz() a été retiré ici pour s'assurer qu'il n'est déclenché que par le bouton.
-        }
     }
 
 
@@ -475,7 +525,7 @@
     async function chargerQuiz() {
       const container = document.getElementById("quizContainer");
       
-      // 💥 Vider le conteneur IMMÉDIATEMENT pour afficher un message de chargement
+      // Vider le conteneur IMMÉDIATEMENT pour afficher un message de chargement
       container.innerHTML = "<div class='page' style='text-align: center;'>Chargement des questions...</div>";
       
       const matiereSelectionnee = document.getElementById("matiereSelect").value;
@@ -559,8 +609,10 @@
         
         // Si la réponse est correcte
         if (reponse.trim() === bonneReponse.trim()) {
-            element.style.backgroundColor = 'rgb(37, 211, 102)'; 
-            element.style.boxShadow = '0 0 10px rgba(37, 211, 102, 0.5)';
+            // 🟢 Succès : Utiliser les couleurs définies dans les variables CSS
+            element.style.backgroundColor = 'var(--secondary-color)'; 
+            element.style.color = 'white';
+            element.style.boxShadow = '0 0 10px rgba(46, 204, 113, 0.5)';
             explicationDiv.style.borderLeftColor = 'var(--secondary-color)';
             
             explicationDiv.innerHTML = `✅ **Bonne réponse !**<br> ${explication}`;
@@ -576,13 +628,16 @@
         // Si la réponse est incorrecte
         else {
             essais[questionId]++;
-            element.style.backgroundColor = 'rgb(229, 115, 115)'; 
+            // 🔴 Erreur : Utiliser les couleurs définies dans les variables CSS
+            element.style.backgroundColor = 'var(--error-color)'; 
+            element.style.color = 'white';
             
             if (essais[questionId] >= 3) {
                 optionsButtons.forEach(btn => {
                     if (btn.textContent.trim() === bonneReponse.trim()) {
-                        btn.style.backgroundColor = 'rgb(37, 211, 102)';
-                        btn.style.opacity = 1;
+                        // Montrer la bonne réponse en vert (succès)
+                        btn.style.backgroundColor = 'var(--secondary-color)'; 
+                        btn.style.color = 'white';
                     }
                     btn.disabled = true; 
                 });
