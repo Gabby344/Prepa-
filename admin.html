@@ -49,32 +49,41 @@
       font-weight: bold;
       text-align: center;
     }
+    #formulaire, #successMsg {
+      display: none;
+    }
   </style>
 </head>
 <body>
 
-  <h2>📘 Ajouter un Quiz</h2>
+  <h2>🔐 Accès Admin</h2>
+  <input type="password" id="motDePasse" placeholder="Mot de passe" />
+  <button onclick="verifierMotDePasse()">Accéder</button>
 
-  <label for="matiere">Matière</label>
-  <input type="text" id="matiere" placeholder="Ex: Mathématiques" />
+  <div id="formulaire">
+    <h2>📘 Ajouter un Quiz</h2>
 
-  <label for="niveau">Niveau</label>
-  <input type="text" id="niveau" placeholder="Ex: Facile" />
+    <label for="matiere">Matière</label>
+    <input type="text" id="matiere" placeholder="Ex: Mathématiques" />
 
-  <label for="question">Question</label>
-  <textarea id="question" rows="2" placeholder="Ex: Combien font 7 × 8 ?"></textarea>
+    <label for="niveau">Niveau</label>
+    <input type="text" id="niveau" placeholder="Ex: Facile" />
 
-  <label for="options">Options (séparées par des virgules)</label>
-  <input type="text" id="options" placeholder="Ex: 54, 56, 58, 60" />
+    <label for="question">Question</label>
+    <textarea id="question" rows="2" placeholder="Ex: Combien font 7 × 8 ?"></textarea>
 
-  <label for="bonneReponse">Bonne réponse</label>
-  <input type="text" id="bonneReponse" placeholder="Ex: 56" />
+    <label for="options">Options (séparées par des virgules)</label>
+    <input type="text" id="options" placeholder="Ex: 54, 56, 58, 60" />
 
-  <label for="explication">Explication</label>
-  <textarea id="explication" rows="3" placeholder="Ex: 7 × 8 = 56 car..."></textarea>
+    <label for="bonneReponse">Bonne réponse</label>
+    <input type="text" id="bonneReponse" placeholder="Ex: 56" />
 
-  <button onclick="ajouterQuiz()">Ajouter le quiz</button>
-  <div class="success" id="successMsg"></div>
+    <label for="explication">Explication</label>
+    <textarea id="explication" rows="3" placeholder="Ex: 7 × 8 = 56 car..."></textarea>
+
+    <button onclick="ajouterQuiz()">Ajouter le quiz</button>
+    <div class="success" id="successMsg"></div>
+  </div>
 
   <script>
     const firebaseConfig = {
@@ -88,6 +97,20 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+
+    const motDePasseAdmin = "prepa2025";
+
+    function verifierMotDePasse() {
+      const saisie = document.getElementById("motDePasse").value.trim();
+      if (saisie === motDePasseAdmin) {
+        document.getElementById("motDePasse").style.display = "none";
+        document.querySelector("button").style.display = "none";
+        document.querySelector("h2").innerText = "✅ Accès autorisé";
+        document.getElementById("formulaire").style.display = "block";
+      } else {
+        alert("🛑 Mot de passe incorrect.");
+      }
+    }
 
     async function ajouterQuiz() {
       const matiere = document.getElementById("matiere").value.trim();
@@ -115,6 +138,8 @@
         });
 
         document.getElementById("successMsg").innerText = "✅ Quiz ajouté avec succès !";
+        document.getElementById("successMsg").style.display = "block";
+
         document.getElementById("matiere").value = "";
         document.getElementById("niveau").value = "";
         document.getElementById("question").value = "";
