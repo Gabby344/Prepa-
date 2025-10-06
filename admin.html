@@ -135,7 +135,7 @@
     <label for="explication">Explication</label>
     <textarea id="explication" rows="3" placeholder="Ex: Elle a commencé en 1789 avec la prise de la Bastille."></textarea>
 
-    <button id="mainFormButton" onclick="ajouterQuiz()">Ajouter le quiz</button>
+    <button id="mainFormButton" onclick="gererSoumissionQuiz()">Ajouter le quiz</button>
     
     <div id="feedbackMessage" style="display: none;"></div>
     
@@ -162,23 +162,21 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    let quizEnEditionId = null; // Variable pour suivre l'ID du quiz en cours de modification
+    let quizEnEditionId = null;
 
     // --- LOGIQUE D'AUTHENTIFICATION ---
 
     auth.onAuthStateChanged(user => {
         if (user) {
-            // Utilisateur connecté
             document.getElementById("authSection").style.display = "none";
             document.getElementById("formulaire").style.display = "block";
             document.getElementById("listeQuizzes").style.display = "block";
             chargerListeQuizzes();
         } else {
-            // Utilisateur déconnecté
             document.getElementById("authSection").style.display = "block";
             document.getElementById("formulaire").style.display = "none";
             document.getElementById("listeQuizzes").style.display = "none";
-            quizEnEditionId = null; // S'assurer que le mode édition est désactivé
+            quizEnEditionId = null;
         }
     });
 
@@ -189,12 +187,14 @@
         authMsg.style.display = "none";
 
         try {
+            // Firebase gère la vérification du mot de passe
             await auth.signInWithEmailAndPassword(email, password);
+            // La fonction onAuthStateChanged s'occupera d'afficher l'interface
         } catch (error) {
             authMsg.className = "error";
             authMsg.innerText = "Erreur de connexion : Vérifiez l'email/mot de passe.";
+            console.error("Erreur Firebase Auth:", error); 
             authMsg.style.display = "block";
-            console.error(error);
         }
     }
     
@@ -204,9 +204,8 @@
         document.getElementById("feedbackMessage").style.display = "none";
     }
 
-    // --- FONCTIONS DE GESTION DU FORMULAIRE (Ajout/Modification) ---
-
-    // Fonction principale appelée par le bouton du formulaire
+    // --- FONCTIONS CRUD (FORMULAIRE) ---
+    
     function gererSoumissionQuiz() {
         if (quizEnEditionId) {
             modifierQuiz(quizEnEditionId);
@@ -214,10 +213,6 @@
             ajouterQuiz();
         }
     }
-    
-    // Assurez-vous que le bouton appelle la fonction de gestion
-    document.getElementById("mainFormButton").onclick = gererSoumissionQuiz;
-
 
     async function ajouterQuiz() {
       const matiere = document.getElementById("matiere").value.trim();
@@ -229,7 +224,6 @@
       const feedback = document.getElementById("feedbackMessage");
       
       feedback.style.display = "none";
-
       const options = optionsRaw.split(',').map(opt => opt.trim()).filter(opt => opt);
 
       if (!matiere || !niveau || !question || options.length < 2 || !bonneReponse || !explication) {
@@ -260,7 +254,6 @@
         feedback.className = "error";
         feedback.innerText = "❌ Erreur lors de l'ajout : " + error.message;
         feedback.style.display = "block";
-        console.error("Erreur Firestore :", error);
       }
     }
 
@@ -274,7 +267,6 @@
         const feedback = document.getElementById("feedbackMessage");
         
         feedback.style.display = "none";
-
         const options = optionsRaw.split(',').map(opt => opt.trim()).filter(opt => opt);
 
         if (!matiere || !niveau || !question || options.length < 2 || !bonneReponse || !explication) {
@@ -304,7 +296,6 @@
             feedback.className = "error";
             feedback.innerText = "❌ Erreur lors de la modification : " + error.message;
             feedback.style.display = "block";
-            console.error("Erreur Firestore :", error);
         }
     }
 
@@ -340,7 +331,6 @@
         container.innerHTML = "Chargement des questions...";
 
         try {
-            // Ordonner par date d'ajout pour voir les plus récents en premier
             const snapshot = await db.collection("quizzes").orderBy("dateAjout", "desc").get();
             container.innerHTML = "";
             
@@ -367,7 +357,6 @@
             
         } catch (error) {
             container.innerHTML = "Erreur lors du chargement de la liste.";
-            console.error("Erreur de chargement des quizzes :", error);
         }
     }
 
@@ -401,10 +390,10 @@
             cancelButton.style.backgroundColor = '#888';
             cancelButton.onclick = reinitialiserFormulaire;
             // Insérer juste avant le bouton de déconnexion
-            document.getElementById('formulaire').insertBefore(cancelButton, document.getElementById('feedbackMessage'));
+            const disconnectBtn = document.querySelector('#formulaire button[onclick="deconnexion()"]');
+            document.getElementById('formulaire').insertBefore(cancelButton, disconnectBtn);
         }
 
-        // Défiler vers le haut pour voir le formulaire
         window.scrollTo(0, 0); 
         document.getElementById("feedbackMessage").style.display = "none";
     }
@@ -417,10 +406,9 @@
         try {
             await db.collection("quizzes").doc(id).delete();
             alert("Quiz supprimé avec succès !");
-            chargerListeQuizzes(); // Rafraîchir la liste
+            chargerListeQuizzes();
         } catch (error) {
             alert("Erreur lors de la suppression : " + error.message);
-            console.error("Erreur de suppression :", error);
         }
     }
   </script>
