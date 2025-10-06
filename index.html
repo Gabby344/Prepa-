@@ -4,14 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Prépa+ — Révise avec fierté</title>
-
-  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Open+Sans&display=swap" rel="stylesheet" />
-
-  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore-compat.js"></script>
-
   <style>
     body {
       font-family: 'Open Sans', sans-serif;
@@ -22,128 +17,37 @@
       text-align: center;
       animation: fadeIn 1.5s ease forwards;
     }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    .logo {
-      font-family: 'Playfair Display', serif;
-      font-size: 2.5em;
-      margin-top: 20px;
-      color: #2c3e50;
-    }
-
-    .slogan {
-      font-style: italic;
-      font-size: 1.1em;
-      margin-bottom: 30px;
-      color: #555;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .logo { font-family: 'Playfair Display', serif; font-size: 2.5em; margin-top: 20px; color: #2c3e50; }
+    .slogan { font-style: italic; font-size: 1.1em; margin-bottom: 30px; color: #555; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
     .grid button {
-      padding: 15px;
-      font-size: 1em;
-      background-color: #2c3e50;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: transform 0.2s;
+      padding: 15px; font-size: 1em; background-color: #2c3e50; color: white;
+      border: none; border-radius: 8px; cursor: pointer; transition: transform 0.2s;
     }
-
-    .grid button:hover {
-      background-color: #1a252f;
-      transform: scale(1.05);
-    }
-
-    .progress {
-      margin: 20px auto;
-      width: 80%;
-      background-color: #ccc;
-      border-radius: 20px;
-      overflow: hidden;
-    }
-
-    .progress-bar {
-      height: 20px;
-      width: 12%;
-      background-color: #25D366;
-      transition: width 1s ease;
-    }
-
-    .quote {
-      margin-top: 30px;
-      font-style: italic;
-      color: #666;
-    }
-
+    .grid button:hover { background-color: #1a252f; transform: scale(1.05); }
+    .progress { margin: 20px auto; width: 80%; background-color: #ccc; border-radius: 20px; overflow: hidden; }
+    .progress-bar { height: 20px; width: 12%; background-color: #25D366; transition: width 1s ease; }
+    .quote { margin-top: 30px; font-style: italic; color: #666; }
     .page {
-      background: #fff;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 15px;
-      margin: 10px auto;
-      width: 90%;
-      text-align: left;
+      background: #fff; border: 1px solid #ccc; border-radius: 8px;
+      padding: 15px; margin: 10px auto; width: 90%; text-align: left;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
-
-    .page h3 {
-      margin-bottom: 10px;
-    }
-
+    .page h3 { margin-bottom: 10px; }
     .page button {
-      display: block;
-      margin: 5px 0;
-      padding: 10px;
-      width: 100%;
-      background-color: #2c3e50;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
+      display: block; margin: 5px 0; padding: 10px; width: 100%;
+      background-color: #2c3e50; color: white; border: none; border-radius: 6px; cursor: pointer;
     }
-
-    .page button:hover {
-      background-color: #1a252f;
-    }
-
-    .admin-link {
-      margin-top: 30px;
-    }
-
-    .admin-link a {
-      text-decoration: none;
-    }
-
+    .page button:hover { background-color: #1a252f; }
+    .admin-link { margin-top: 30px; }
+    .admin-link a { text-decoration: none; }
     .admin-link button {
-      padding: 10px 20px;
-      background-color: #888;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 0.9em;
-      cursor: pointer;
+      padding: 10px 20px; background-color: #888; color: white;
+      border: none; border-radius: 6px; font-size: 0.9em; cursor: pointer;
     }
-
-    .admin-link button:hover {
-      background-color: #555;
-    }
-
-    footer {
-      margin-top: 40px;
-      font-size: 0.9em;
-      color: #777;
-    }
+    .admin-link button:hover { background-color: #555; }
+    footer { margin-top: 40px; font-size: 0.9em; color: #777; }
   </style>
 </head>
 <body>
@@ -167,17 +71,13 @@
 
   <div id="quizContainer"></div>
 
-  <!-- 🔐 Lien vers l'admin -->
   <div class="admin-link">
-    <a href="admin.html">
-      <button>🔐 Accès Admin</button>
-    </a>
+    <a href="admin.html"><button>🔐 Accès Admin</button></a>
   </div>
 
   <footer>Conçu par <strong>Gabby Umba — ISC Lwanga</strong></footer>
 
   <script>
-    // Initialisation Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAuHPWVOkd96xPqKQ_K1cC4n4ihuPfuNFQ",
       authDomain: "abiga-1718.firebaseapp.com",
@@ -186,25 +86,18 @@
       messagingSenderId: "103455679291",
       appId: "1:103455679291:web:eda13441fedfce226d4d1e"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Barre de progression
-    window.onload = function() {
+    window.onload = () => {
       document.getElementById("progressBar").style.width = "12%";
     };
 
-    // Charger les quiz
     async function chargerQuiz() {
       const container = document.getElementById("quizContainer");
       container.innerHTML = "";
 
-      const snapshot = await db.collection("quizzes")
-        .where("matière", "==", "Mathématiques")
-        .where("niveau", "==", "Facile")
-        .get();
-
+      const snapshot = await db.collection("quizzes").get();
       snapshot.forEach(doc => {
         const data = doc.data();
         const div = document.createElement('div');
@@ -219,7 +112,6 @@
       });
     }
 
-    // Vérifier la réponse
     function verifierReponse(reponse, bonneReponse, explication) {
       if (reponse === bonneReponse) {
         alert("✅ Bonne réponse !\n\n" + explication);
