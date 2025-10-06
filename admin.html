@@ -4,23 +4,30 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Admin Prépa+</title>
+  
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore-compat.js"></script>
+  
   <style>
     body {
       font-family: 'Open Sans', sans-serif;
       background: #f4f4f4;
       padding: 20px;
       color: #2c3e50;
+      max-width: 600px;
+      margin: 0 auto;
     }
     h2 {
       text-align: center;
       margin-bottom: 20px;
+      color: #2c3e50;
     }
     label {
       display: block;
-      margin-top: 10px;
+      margin-top: 15px;
       font-weight: bold;
+      font-size: 0.9em;
     }
     input, textarea {
       width: 100%;
@@ -28,6 +35,7 @@
       margin-top: 5px;
       border-radius: 6px;
       border: 1px solid #ccc;
+      box-sizing: border-box; /* Important pour le padding */
     }
     button {
       margin-top: 20px;
@@ -39,51 +47,104 @@
       border-radius: 8px;
       font-size: 1em;
       cursor: pointer;
+      transition: background-color 0.2s ease;
     }
     button:hover {
       background-color: #1a252f;
     }
-    .success {
+    .success, .error {
       margin-top: 15px;
-      color: green;
-      font-weight: bold;
+      padding: 10px;
+      border-radius: 6px;
       text-align: center;
+      font-weight: bold;
     }
-    #formulaire, #successMsg {
-      display: none;
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    #authSection, #formulaire, #listeQuizzes {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      margin-bottom: 30px;
+    }
+
+    /* Styles pour la liste des questions */
+    .quiz-item {
+        border: 1px solid #eee;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 6px;
+        background-color: #f9f9f9;
+        text-align: left;
+    }
+    .quiz-item strong {
+        display: block;
+        color: #007bff;
+        margin-bottom: 5px;
+    }
+    .quiz-item button {
+        width: auto;
+        padding: 5px 10px;
+        margin-top: 5px;
+        background-color: #e74c3c;
+        font-size: 0.8em;
     }
   </style>
 </head>
 <body>
 
-  <h2>🔐 Accès Admin</h2>
-  <input type="password" id="motDePasse" placeholder="Mot de passe" />
-  <button onclick="verifierMotDePasse()">Accéder</button>
+  <h2>🔐 Panneau d'Administration Prépa+</h2>
+  
+  <div id="authSection">
+    <h3>Connexion Admin</h3>
+    <label for="adminEmail">Email</label>
+    <input type="email" id="adminEmail" placeholder="admin@votreapp.com" />
+    
+    <label for="adminPassword">Mot de passe</label>
+    <input type="password" id="adminPassword" placeholder="Mot de passe" />
+    
+    <button onclick="seConnecter()">Se connecter</button>
+    <div id="authMessage" class="error" style="display: none;"></div>
+  </div>
 
-  <div id="formulaire">
-    <h2>📘 Ajouter un Quiz</h2>
+  <div id="formulaire" style="display: none;">
+    <h2>➕ Ajouter un Quiz</h2>
 
     <label for="matiere">Matière</label>
-    <input type="text" id="matiere" placeholder="Ex: Mathématiques" />
+    <input type="text" id="matiere" placeholder="Ex: Histoire" />
 
     <label for="niveau">Niveau</label>
-    <input type="text" id="niveau" placeholder="Ex: Facile" />
+    <input type="text" id="niveau" placeholder="Ex: Intermédiaire" />
 
     <label for="question">Question</label>
-    <textarea id="question" rows="2" placeholder="Ex: Combien font 7 × 8 ?"></textarea>
+    <textarea id="question" rows="2" placeholder="Ex: Quand a eu lieu la Révolution française ?"></textarea>
 
     <label for="options">Options (séparées par des virgules)</label>
-    <input type="text" id="options" placeholder="Ex: 54, 56, 58, 60" />
+    <input type="text" id="options" placeholder="Ex: 1789, 1800, 1914" />
 
     <label for="bonneReponse">Bonne réponse</label>
-    <input type="text" id="bonneReponse" placeholder="Ex: 56" />
+    <input type="text" id="bonneReponse" placeholder="Ex: 1789" />
 
     <label for="explication">Explication</label>
-    <textarea id="explication" rows="3" placeholder="Ex: 7 × 8 = 56 car..."></textarea>
+    <textarea id="explication" rows="3" placeholder="Ex: Elle a commencé en 1789 avec la prise de la Bastille."></textarea>
 
     <button onclick="ajouterQuiz()">Ajouter le quiz</button>
-    <div class="success" id="successMsg"></div>
+    <div id="feedbackMessage" style="display: none;"></div>
+    <button onclick="deconnexion()">Se déconnecter</button>
   </div>
+  
+  <div id="listeQuizzes" style="display: none;">
+      <h2>📋 Quizzes Existants</h2>
+      <div id="quizzesContainer">Chargement...</div>
+  </div>
+
 
   <script>
     const firebaseConfig = {
@@ -96,21 +157,52 @@
     };
 
     firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
     const db = firebase.firestore();
+    
+    // --- FONCTIONS D'AUTHENTIFICATION (SÉCURITÉ) ---
 
-    const motDePasseAdmin = "prepa2025";
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            // Utilisateur connecté : afficher l'interface admin
+            document.getElementById("authSection").style.display = "none";
+            document.getElementById("formulaire").style.display = "block";
+            document.getElementById("listeQuizzes").style.display = "block";
+            chargerListeQuizzes();
+        } else {
+            // Utilisateur déconnecté : afficher la connexion
+            document.getElementById("authSection").style.display = "block";
+            document.getElementById("formulaire").style.display = "none";
+            document.getElementById("listeQuizzes").style.display = "none";
+        }
+    });
 
-    function verifierMotDePasse() {
-      const saisie = document.getElementById("motDePasse").value.trim();
-      if (saisie === motDePasseAdmin) {
-        document.getElementById("motDePasse").style.display = "none";
-        document.querySelector("button").style.display = "none";
-        document.querySelector("h2").innerText = "✅ Accès autorisé";
-        document.getElementById("formulaire").style.display = "block";
-      } else {
-        alert("🛑 Mot de passe incorrect.");
-      }
+    async function seConnecter() {
+        const email = document.getElementById("adminEmail").value;
+        const password = document.getElementById("adminPassword").value;
+        const authMsg = document.getElementById("authMessage");
+        authMsg.style.display = "none";
+
+        try {
+            await auth.signInWithEmailAndPassword(email, password);
+            authMsg.className = "success";
+            authMsg.innerText = "Connexion réussie !";
+            authMsg.style.display = "block";
+        } catch (error) {
+            authMsg.className = "error";
+            authMsg.innerText = "Erreur de connexion : Vérifiez l'email/mot de passe.";
+            authMsg.style.display = "block";
+            console.error(error);
+        }
     }
+    
+    function deconnexion() {
+        auth.signOut();
+        document.getElementById("authMessage").style.display = "none";
+        document.getElementById("feedbackMessage").style.display = "none";
+    }
+
+    // --- FONCTIONS DE GESTION DU QUIZ ---
 
     async function ajouterQuiz() {
       const matiere = document.getElementById("matiere").value.trim();
@@ -119,11 +211,16 @@
       const optionsRaw = document.getElementById("options").value.trim();
       const bonneReponse = document.getElementById("bonneReponse").value.trim();
       const explication = document.getElementById("explication").value.trim();
+      const feedback = document.getElementById("feedbackMessage");
+      
+      feedback.style.display = "none";
 
       const options = optionsRaw.split(',').map(opt => opt.trim()).filter(opt => opt);
 
       if (!matiere || !niveau || !question || options.length < 2 || !bonneReponse || !explication) {
-        alert("🛑 Remplis tous les champs correctement.");
+        feedback.className = "error";
+        feedback.innerText = "🛑 Remplis tous les champs correctement.";
+        feedback.style.display = "block";
         return;
       }
 
@@ -134,21 +231,79 @@
           question: question,
           options: options,
           bonneReponse: bonneReponse,
-          explication: explication
+          explication: explication,
+          dateAjout: firebase.firestore.FieldValue.serverTimestamp() // Ajout d'un horodatage
         });
 
-        document.getElementById("successMsg").innerText = "✅ Quiz ajouté avec succès !";
-        document.getElementById("successMsg").style.display = "block";
+        feedback.className = "success";
+        feedback.innerText = "✅ Quiz ajouté avec succès !";
+        feedback.style.display = "block";
 
+        // Vider les champs
         document.getElementById("matiere").value = "";
         document.getElementById("niveau").value = "";
         document.getElementById("question").value = "";
         document.getElementById("options").value = "";
         document.getElementById("bonneReponse").value = "";
         document.getElementById("explication").value = "";
+        
+        chargerListeQuizzes(); // Mettre à jour la liste
+        
       } catch (error) {
-        alert("❌ Erreur lors de l'ajout : " + error.message);
+        feedback.className = "error";
+        feedback.innerText = "❌ Erreur lors de l'ajout : " + error.message;
+        feedback.style.display = "block";
+        console.error("Erreur Firestore :", error);
       }
+    }
+    
+    async function chargerListeQuizzes() {
+        const container = document.getElementById("quizzesContainer");
+        container.innerHTML = "Chargement des questions...";
+
+        try {
+            const snapshot = await db.collection("quizzes").orderBy("dateAjout", "desc").get();
+            container.innerHTML = "";
+            
+            if (snapshot.empty) {
+                container.innerHTML = "Aucune question trouvée.";
+                return;
+            }
+
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const id = doc.id;
+                
+                const item = document.createElement('div');
+                item.className = 'quiz-item';
+                item.innerHTML = `
+                    <strong>[${data.matière} - ${data.niveau}] Question :</strong> ${data.question}<br>
+                    Réponse : ${data.bonneReponse}<br>
+                    Options : ${data.options.join(', ')}
+                    <button onclick="supprimerQuiz('${id}')">Supprimer</button>
+                `;
+                container.appendChild(item);
+            });
+            
+        } catch (error) {
+            container.innerHTML = "Erreur lors du chargement de la liste.";
+            console.error("Erreur de chargement des quizzes :", error);
+        }
+    }
+    
+    async function supprimerQuiz(id) {
+        if (!confirm("Êtes-vous sûr de vouloir supprimer ce quiz ?")) {
+            return;
+        }
+        
+        try {
+            await db.collection("quizzes").doc(id).delete();
+            alert("Quiz supprimé avec succès !");
+            chargerListeQuizzes(); // Rafraîchir la liste
+        } catch (error) {
+            alert("Erreur lors de la suppression : " + error.message);
+            console.error("Erreur de suppression :", error);
+        }
     }
   </script>
 </body>
