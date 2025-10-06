@@ -9,6 +9,7 @@
 
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore-compat.js"></script>
+  <script src="https://unpkg.com/@google/genai@0.1.0/dist/index.umd.js"></script> 
 
   <style>
     /* VARIABLES DE COULEUR */
@@ -41,7 +42,6 @@
       left: 0;
       width: 100%;
       height: 100%;
-      /* Votre image (IMG_7393.jpeg) */
       background: url('IMG_7393.jpeg') no-repeat center center/cover; 
       z-index: -2; 
     }
@@ -54,8 +54,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        /* 🎨 AMÉLIORÉ : Filtre plus sombre pour mieux faire ressortir les cartes et le texte */
-        background: rgba(0, 0, 0, 0.45); 
+        background: rgba(0, 0, 0, 0.45); /* Plus sombre pour meilleur contraste */
         z-index: -1;
     }
     
@@ -76,7 +75,7 @@
       font-family: 'Playfair Display', serif;
       font-size: 3em;
       margin-top: 10px;
-      color: var(--card-bg); /* Changé pour être lisible sur l'overlay */
+      color: var(--card-bg); /* Lisibilité sur l'overlay */
       font-weight: 700;
       text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
     }
@@ -85,7 +84,7 @@
       font-style: italic;
       font-size: 1.1em;
       margin-bottom: 40px;
-      color: #D5DBDB; /* Couleur claire pour lisibilité */
+      color: #D5DBDB; 
       text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
     }
 
@@ -118,17 +117,15 @@
       box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
     }
 
-    /* --- AMÉLIORATIONS CSS À PARTIR DE LA PROGRESSION --- */
-
     /* PROGRESSION */
     .progress {
-      margin: 20px auto 10px; /* Rapprochement du texte */
+      margin: 20px auto 10px; 
       width: 90%;
       max-width: 500px;
       background-color: #ECF0F1; 
-      border-radius: 20px; /* Plus arrondi */
+      border-radius: 20px;
       overflow: hidden;
-      height: 15px; /* Plus fin */
+      height: 15px; 
       box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
@@ -138,20 +135,19 @@
       background-color: var(--secondary-color);
       transition: width 1s ease-in-out;
       border-radius: 20px 0 0 20px;
-      box-shadow: none; /* Look moderne et plat */
+      box-shadow: none;
     }
 
     /* Texte de Progression */
     .progress-status {
-      /* Nouveau style pour garantir la lisibilité sur l'image */
       background: rgba(255, 255, 255, 0.9); 
       padding: 5px 15px;
       border-radius: 8px;
       display: inline-block; 
       margin-top: 0; 
       font-size: 1.05em;
-      font-weight: 700; 
-      color: var(--primary-color);
+      font-weight: 700 !important; 
+      color: var(--primary-color) !important;
       margin-bottom: 5px;
     }
 
@@ -161,8 +157,8 @@
       max-width: 500px;
       font-size: 1.05em;
       font-style: italic;
-      color: var(--card-bg); /* Couleur claire sur l'overlay sombre */
-      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); /* Ombre pour contraste */
+      color: var(--card-bg); 
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); 
       padding: 0 10px;
     }
 
@@ -176,16 +172,14 @@
       width: 95%;
       max-width: 500px;
       text-align: left;
-      /* Ombre plus professionnelle */
       box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); 
     }
     
     #quizContainer .page {
-        margin: 0 auto 25px; /* Ajusté pour séparer les questions */
+        margin: 0 auto 25px; 
         padding: 30px; 
     }
 
-    /* Texte d'instruction au début du Quiz */
     #quizContainer .page[style*="text-align: center"] {
         font-size: 1.1em;
         line-height: 1.6;
@@ -195,19 +189,18 @@
     
     .page h3 {
       margin-bottom: 20px;
-      font-size: 1.25em; /* Question plus grande */
+      font-size: 1.25em; 
       color: var(--text-dark);
       font-weight: 700;
       line-height: 1.4;
     }
 
-    /* Boutons de réponse (Options) */
     .page button {
       display: block;
       margin: 8px 0;
-      padding: 15px 15px; /* Augmenter la zone de clic */
+      padding: 15px 15px; 
       width: 100%;
-      background-color: #F8F9FA; /* Fond plus clair */
+      background-color: #F8F9FA; 
       color: var(--text-dark);
       border: 1px solid #EAECEE;
       border-radius: 10px;
@@ -224,11 +217,10 @@
       border-color: var(--primary-color);
     }
 
-    /* Style du feedback (explication) */
     .explication {
         margin-top: 15px;
         padding: 15px;
-        border-left: 5px solid; /* Couleur définie par JS (success/error) */
+        border-left: 5px solid; 
         background-color: #F8F9FA; 
         border-radius: 0 8px 8px 0;
         font-size: 0.95em;
@@ -236,13 +228,13 @@
         text-align: left;
     }
     
-    /* FILTRE QUIZ (Carte Améliorée) */
+    /* FILTRE QUIZ */
     .quiz-filter {
         text-align: center;
-        padding: 25px; /* Augmenté */
+        padding: 25px;
         background-color: var(--card-bg);
         border-radius: 15px;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15); /* Cohérence avec les cartes */
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15); 
         max-width: 500px;
         margin: 0 auto 25px;
     }
@@ -258,7 +250,7 @@
 
     .quiz-filter select {
         display: block;
-        width: 100%; /* Pleine largeur */
+        width: 100%; 
         padding: 12px 15px; 
         border-radius: 10px;
         border: 1px solid #BDC3C7;
@@ -269,7 +261,6 @@
         color: var(--text-dark);
     }
     
-    /* Bouton Lancer le Quiz */
     .quiz-filter button {
         width: 100%; 
         padding: 15px 20px; 
@@ -279,7 +270,6 @@
         border-radius: 10px;
         font-weight: 700;
         transition: background-color 0.2s;
-        /* Ombre pour le bouton d'action principal */
         box-shadow: 0 4px 10px rgba(46, 204, 113, 0.4); 
     }
     .quiz-filter button:hover {
@@ -287,7 +277,7 @@
       transform: none; 
     }
     
-    /* BOUTON ADMIN (Secondaire et Décentré) */
+    /* BOUTON ADMIN */
     .admin-link {
       margin-top: 50px;
       padding-bottom: 50px; 
@@ -299,7 +289,6 @@
 
     .admin-link button {
       padding: 15px 30px; 
-      /* Couleur secondaire/neutre */
       background-color: #BDC3C7; 
       color: white;
       border: none;
@@ -308,7 +297,6 @@
       font-weight: 600;
       cursor: pointer;
       transition: background-color 0.2s ease, transform 0.1s ease;
-      /* Ombre subtile */
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       width: 70%; 
       max-width: 300px;
@@ -403,10 +391,16 @@
         <h2>🧠 Coaching IA</h2>
         <p style="text-align: center; color: #555;">Pose tes questions sur n'importe quel concept et obtiens une explication rapide.</p>
         
-        <textarea placeholder="Ex: Explique-moi la différence entre l'inflation et la déflation." rows="4" style="width: 100%; padding: 15px; border-radius: 8px; border: 1px solid #BDC3C7; box-sizing: border-box; resize: none;"></textarea>
-        <button style="background-color: var(--error-color); margin-bottom: 20px;">Poser la question à l'IA</button>
+        <textarea id="aiQuestionInput" placeholder="Ex: Explique-moi la différence entre l'inflation et la déflation." rows="4" style="width: 100%; padding: 15px; border-radius: 8px; border: 1px solid #BDC3C7; box-sizing: border-box; resize: none;"></textarea>
         
-        <p style="font-size: 0.9em; color: #7F8C8D; text-align: center;">*Note : Le coaching IA est une simulation pour l'instant.*</p>
+        <button onclick="poserQuestionIA()" style="background-color: var(--primary-color); color: white; margin-bottom: 20px;">Poser la question à l'IA</button>
+        
+        <div id="aiResponseArea" class="page" style="text-align: left; padding: 15px; background: #EAF2F8; border-left: 5px solid var(--primary-color); display: none; margin-top: 10px;">
+            <p style="font-weight: 700; color: var(--primary-color);">Réponse du Coach IA :</p>
+            <p id="aiResponseText"></p>
+        </div>
+
+        <p style="font-size: 0.9em; color: #7F8C8D; text-align: center; margin-top: 10px;">*Attention : Clé API exposée dans le JS pour ce test. Solution déconseillée en production.*</p>
         <button onclick="changerPage('dashboard')">Retour à l'accueil</button>
     </div>
 
@@ -442,6 +436,15 @@
     let progressionActuelle = 0; 
     let matieresDisponibles = new Set(); 
 
+    // ===========================================
+    // 🧠 CONFIGURATION IA (INTÉGRATION DIRECTE)
+    // 🚨 SÉCURITÉ : CLÉ EXPOSÉE POUR LE TEST
+    // ===========================================
+    
+    const GEMINI_API_KEY_CLIENT = 'AIzaSyDZvzsVds1J20oTVqy3Kkyb4C_vixkAi6I'; 
+    const ai = new GoogleGenAI(GEMINI_API_KEY_CLIENT);
+
+
     // --- GESTION DE LA PROGRESSION ---
     
     window.onload = () => {
@@ -462,9 +465,31 @@
         }
     }
 
-    // --- GESTION DU FILTRE DE MATIÈRE ---
+    // --- FONCTION DE NAVIGATION (inchangée) ---
+    
+    function changerPage(pageId) {
+        const allPageContainers = document.querySelectorAll('.content-page');
+        allPageContainers.forEach(page => {
+            page.style.display = 'none';
+        });
+        
+        document.getElementById('dashboardPage').style.display = 'block';
+
+        if (pageId !== 'dashboard' && pageId !== 'quiz') {
+            document.getElementById('quizContainer').style.display = 'none';
+            document.querySelector('.quiz-filter').style.display = 'none';
+
+            document.getElementById(pageId + 'Page').style.display = 'block';
+        } else {
+            document.getElementById('quizContainer').style.display = 'block';
+            document.querySelector('.quiz-filter').style.display = 'block';
+        }
+    }
+
+    // --- FONCTION QUIZ (inchangée) ---
 
     async function chargerMatieresDisponibles() {
+        // ... (Logique pour charger les matières)
         const selectElement = document.getElementById("matiereSelect");
         
         try {
@@ -498,34 +523,8 @@
         // Aucune action ici, le quiz est lancé par le bouton
     }
 
-    // --- FONCTION DE NAVIGATION ---
-    
-    function changerPage(pageId) {
-        const allPageContainers = document.querySelectorAll('.content-page');
-        allPageContainers.forEach(page => {
-            page.style.display = 'none';
-        });
-        
-        document.getElementById('dashboardPage').style.display = 'block';
-
-        if (pageId !== 'dashboard' && pageId !== 'quiz') {
-            document.getElementById('quizContainer').style.display = 'none';
-            document.querySelector('.quiz-filter').style.display = 'none';
-
-            document.getElementById(pageId + 'Page').style.display = 'block';
-        } else {
-            document.getElementById('quizContainer').style.display = 'block';
-            document.querySelector('.quiz-filter').style.display = 'block';
-        }
-    }
-
-
-    // --- FONCTIONS DU QUIZ AVEC FILTRE (Correction du Bug de Répétition) ---
-
     async function chargerQuiz() {
       const container = document.getElementById("quizContainer");
-      
-      // Vider le conteneur IMMÉDIATEMENT pour afficher un message de chargement
       container.innerHTML = "<div class='page' style='text-align: center;'>Chargement des questions...</div>";
       
       const matiereSelectionnee = document.getElementById("matiereSelect").value;
@@ -548,15 +547,12 @@
             toutesLesQuestions.push({ id: doc.id, ...doc.data() }); 
         });
 
-        // 1. Mélanger le tableau de questions pour le rendre aléatoire
         toutesLesQuestions.sort(() => Math.random() - 0.5); 
         
-        // 2. Sélectionner les X premières questions UNIQUES
         questionsDuJour = toutesLesQuestions.slice(0, MAX_QUESTIONS);
         questionsReussies.clear(); 
         essais = {}; 
 
-        // Vider le conteneur une dernière fois avant d'insérer les questions
         container.innerHTML = ""; 
         
         if (questionsDuJour.length === 0) {
@@ -564,7 +560,6 @@
             return;
         }
 
-        // 3. Afficher les questions sélectionnées
         questionsDuJour.forEach(data => {
           const safeExplication = data.explication ? data.explication.replace(/'/g, "\\'") : '';
           const safeReponses = data.bonneReponse ? data.bonneReponse.replace(/'/g, "\\'") : '';
@@ -609,7 +604,6 @@
         
         // Si la réponse est correcte
         if (reponse.trim() === bonneReponse.trim()) {
-            // 🟢 Succès : Utiliser les couleurs définies dans les variables CSS
             element.style.backgroundColor = 'var(--secondary-color)'; 
             element.style.color = 'white';
             element.style.boxShadow = '0 0 10px rgba(46, 204, 113, 0.5)';
@@ -628,14 +622,12 @@
         // Si la réponse est incorrecte
         else {
             essais[questionId]++;
-            // 🔴 Erreur : Utiliser les couleurs définies dans les variables CSS
             element.style.backgroundColor = 'var(--error-color)'; 
             element.style.color = 'white';
             
             if (essais[questionId] >= 3) {
                 optionsButtons.forEach(btn => {
                     if (btn.textContent.trim() === bonneReponse.trim()) {
-                        // Montrer la bonne réponse en vert (succès)
                         btn.style.backgroundColor = 'var(--secondary-color)'; 
                         btn.style.color = 'white';
                     }
@@ -652,6 +644,58 @@
                 explicationDiv.style.borderLeftColor = 'var(--error-color)';
                 explicationDiv.innerHTML = `❌ Mauvaise réponse. Essaie encore (Tentative ${essais[questionId]} / 3)`;
             }
+        }
+    }
+
+    // ===========================================
+    // 🤖 FONCTION COACHING IA (APPEL DIRECT CLIENT)
+    // ===========================================
+
+    async function poserQuestionIA() {
+        const input = document.getElementById("aiQuestionInput");
+        const responseArea = document.getElementById("aiResponseArea");
+        const responseText = document.getElementById("aiResponseText");
+
+        const question = input.value.trim();
+        if (!question) {
+            alert("Veuillez entrer une question.");
+            return;
+        }
+
+        // --- Gestion de l'UI ---
+        responseArea.style.display = 'block';
+        responseArea.style.borderLeftColor = 'var(--primary-color)'; 
+        responseText.textContent = "Le Coach IA réfléchit... (Veuillez patienter)";
+        
+        const button = document.querySelector('#coachingPage button');
+        button.disabled = true;
+        // --- Fin Gestion de l'UI ---
+
+        // Contexte pour l'IA
+        const systemInstruction = `Vous êtes un tuteur de révision nommé Prépa+. Répondez avec précision à la question de l'étudiant en fournissant une explication claire. Votre réponse doit être concise, éducative et formelle.`;
+
+        try {
+            const response = await ai.models.generateContent({
+                model: "gemini-2.5-flash", 
+                contents: [{ role: "user", parts: [{ text: question }] }],
+                config: {
+                    systemInstruction: systemInstruction,
+                    temperature: 0.2, 
+                }
+            });
+
+            // Afficher la réponse
+            const aiAnswer = response.text.trim();
+            responseText.innerHTML = aiAnswer.replace(/\n/g, '<br>');
+            
+        } catch (error) {
+            console.error("Erreur d'appel direct à l'API Gemini:", error);
+            responseText.innerHTML = `❌ **Erreur :** Impossible de contacter le Coach IA. Vérifiez que la clé API est correcte et que vous êtes bien connecté à Internet.`;
+            responseArea.style.borderLeftColor = 'var(--error-color)';
+            
+        } finally {
+            // Réactiver le bouton
+            button.disabled = false;
         }
     }
   </script>
