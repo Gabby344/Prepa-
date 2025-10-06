@@ -54,7 +54,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.45); /* Plus sombre pour meilleur contraste */
+        background: rgba(0, 0, 0, 0.45); 
         z-index: -1;
     }
     
@@ -70,14 +70,44 @@
       to { opacity: 1; transform: translateY(0); }
     }
     
+    /* NOUVEAU: CONTENEUR POUR ALIGNER LOGO ET BOUTON */
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 500px; 
+        margin: 0 auto;
+        padding: 0 10px;
+    }
+
     /* EN-TÊTE */
     .logo {
       font-family: 'Playfair Display', serif;
       font-size: 3em;
       margin-top: 10px;
-      color: var(--card-bg); /* Lisibilité sur l'overlay */
+      color: var(--card-bg);
       font-weight: 700;
       text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    }
+    
+    /* NOUVEAU: BOUTON 'À PROPOS' DANS LE HEADER */
+    .about-button {
+        padding: 8px 13px;
+        font-size: 1.1em;
+        font-weight: 700;
+        line-height: 1;
+        background-color: rgba(255, 255, 255, 0.2); 
+        color: var(--card-bg);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 50%;
+        cursor: pointer;
+        transition: background-color 0.2s, transform 0.1s;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        margin-top: 10px;
+    }
+
+    .about-button:hover {
+        background-color: rgba(255, 255, 255, 0.4);
     }
 
     .slogan {
@@ -325,7 +355,12 @@
   <div id="main-content">
 
     <div id="dashboardPage"> 
-      <div class="logo">📘 Prépa+</div>
+      
+      <div class="header-content">
+        <div class="logo">📘 Prépa+</div>
+        <button class="about-button" onclick="changerPage('about')">i</button>
+      </div>
+      
       <div class="slogan">Révise avec clarté. Progresse avec fierté.</div>
 
       <div class="grid">
@@ -362,6 +397,27 @@
 
     </div> 
 
+    <div id="aboutPage" class="content-page" style="display: none;">
+        <h2>À Propos de Prépa+</h2>
+        <p style="text-align: center; color: var(--primary-color); font-weight: 600;">L'application qui optimise votre réussite scolaire.</p>
+        
+        <h3 style="color: var(--text-dark);">🚀 Rôle et Importance pour les Élèves</h3>
+        <p style="font-size: 0.95em; line-height: 1.5;">**Prépa+** n'est pas seulement une application de quiz ; c'est votre **partenaire de révision stratégique**. Son rôle est de combler l'écart entre le cours magistral et l'examen en offrant :</p>
+        <ul style="list-style-type: '👉'; padding-left: 20px; font-size: 0.9em; line-height: 1.5;">
+          <li><span style="margin-left: 10px;">**Révision Ciblée :** Des quiz basés sur le programme pour maximiser l'efficacité de votre temps d'étude.</span></li>
+          <li><span style="margin-left: 10px;">**Feedback Immédiat :** Des explications détaillées après chaque réponse pour transformer les erreurs en opportunités d'apprentissage.</span></li>
+          <li><span style="margin-left: 10px;">**Coaching IA :** Un tuteur disponible 24/7 pour clarifier les concepts complexes à tout moment.</span></li>
+        </ul>
+        
+        <h3 style="color: var(--text-dark); margin-top: 25px;">👨‍💻 Le Développeur</h3>
+        <p style="font-size: 0.95em; line-height: 1.5; text-align: center;">Je m'appelle **Gabby Umba**, et j'ai développé cette plateforme pour les étudiants de l'ISC Lwanga. Mon objectif est de fournir une solution simple, puissante et pertinente, construite avec passion pour le succès de la communauté étudiante.</p>
+        
+        <p style="font-size: 0.85em; color: #7F8C8D; text-align: center; margin-top: 20px;">Version 1.0. Construite avec HTML, CSS, JavaScript et Firebase.</p>
+        
+        <button onclick="changerPage('dashboard')">Fermer</button>
+    </div>
+
+
     <div id="fichesPage" class="content-page" style="display: none;">
         <h2>📄 Mes Fiches de Révision</h2>
         <p style="text-align: center; color: #555;">Consolide tes connaissances par la lecture de fiches thématiques.</p>
@@ -395,12 +451,14 @@
         
         <button onclick="poserQuestionIA()" style="background-color: var(--primary-color); color: white; margin-bottom: 20px;">Poser la question à l'IA</button>
         
-        <div id="aiResponseArea" class="page" style="text-align: left; padding: 15px; background: #EAF2F8; border-left: 5px solid var(--primary-color); display: none; margin-top: 10px;">
+        <div id="aiResponseArea" class="page" style="text-align: left; padding: 15px; background: #EAF2FF; border-left: 5px solid var(--primary-color); display: none; margin-top: 10px;">
             <p style="font-weight: 700; color: var(--primary-color);">Réponse du Coach IA :</p>
             <p id="aiResponseText"></p>
         </div>
 
-        <p style="font-size: 0.9em; color: #7F8C8D; text-align: center; margin-top: 10px;">*Attention : Clé API exposée dans le JS pour ce test. Solution déconseillée en production.*</p>
+        <p style="font-size: 0.85em; color: var(--error-color); text-align: center; margin-top: 10px;">
+          *Attention : **Clé API exposée** dans le JS pour ce test. Solution déconseillée en production.*
+        </p>
         <button onclick="changerPage('dashboard')">Retour à l'accueil</button>
     </div>
 
@@ -425,7 +483,8 @@
         'quiz': 'dashboardPage', 
         'fiches': 'fichesPage',
         'defis': 'defisPage',
-        'coaching': 'coachingPage'
+        'coaching': 'coachingPage',
+        'about': 'aboutPage' // Nouvelle page ajoutée
     };
 
     let essais = {}; 
@@ -438,10 +497,10 @@
 
     // ===========================================
     // 🧠 CONFIGURATION IA (INTÉGRATION DIRECTE)
-    // 🚨 SÉCURITÉ : CLÉ EXPOSÉE POUR LE TEST
+    // 🚨 REMPLACER LA CHAÎNE CI-DESSOUS
     // ===========================================
     
-    const GEMINI_API_KEY_CLIENT = "AIzaSyDZvzsVds1J20oTVqy3Kkyb4C_vixkAi6I"; 
+    const GEMINI_API_KEY_CLIENT = 'VOTRE_CLE_API_GEMINI_ICI'; 
     const ai = new GoogleGenAI(GEMINI_API_KEY_CLIENT);
 
 
@@ -465,7 +524,7 @@
         }
     }
 
-    // --- FONCTION DE NAVIGATION (inchangée) ---
+    // --- FONCTION DE NAVIGATION ---
     
     function changerPage(pageId) {
         const allPageContainers = document.querySelectorAll('.content-page');
@@ -479,17 +538,20 @@
             document.getElementById('quizContainer').style.display = 'none';
             document.querySelector('.quiz-filter').style.display = 'none';
 
-            document.getElementById(pageId + 'Page').style.display = 'block';
+            // Utiliser l'objet 'pages' pour trouver le bon ID de conteneur
+            const containerId = pages[pageId];
+            if (containerId) {
+                document.getElementById(containerId).style.display = 'block';
+            }
         } else {
             document.getElementById('quizContainer').style.display = 'block';
             document.querySelector('.quiz-filter').style.display = 'block';
         }
     }
 
-    // --- FONCTION QUIZ (inchangée) ---
+    // --- FONCTION QUIZ ---
 
     async function chargerMatieresDisponibles() {
-        // ... (Logique pour charger les matières)
         const selectElement = document.getElementById("matiereSelect");
         
         try {
