@@ -180,49 +180,33 @@
 
   <footer>Conçu avec passion par <strong>Gabby Umba — ISC Lwanga</strong></footer>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAuHPWVOkd96xPqKQ_K1cC4n4ihuPfuNFQ",
-      authDomain: "abiga-1718.firebaseapp.com",
-      projectId: "abiga-1718",
-      storageBucket: "abiga-1718.appspot.com",
-      messagingSenderId: "103455679291",
-      appId: "1:103455679291:web:eda13441fedfce226d4d1e"
-    };
+ <script>
+  async function chargerQuiz() {
+    const container = document.getElementById("quizContainer");
+    container.innerHTML = ""; // 🔄 Nettoie le conteneur avant d’ajouter
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    const snapshot = await db.collection("quizzes").get();
 
-    window.onload = () => {
-      document.getElementById("progressBar").style.width = "12%";
-    };
+    const questionsDéjàAffichées = new Set(); // 🧠 Pour éviter les doublons
 
-    async function chargerQuiz() {
-      const container = document.getElementById("quizContainer");
-      container.innerHTML = "";
+    snapshot.forEach(doc => {
+      const data = doc.data();
 
-      const snapshot = await db.collection("quizzes").get();
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        const div = document.createElement('div');
-        div.className = 'page';
-        div.innerHTML = `
-          <h3>${data.question}</h3>
-          ${data.options.map(opt => `
-            <button onclick="verifierReponse('${opt}', '${data.bonneReponse}', \`${data.explication}\`)">${opt}</button>
-          `).join('')}
-        `;
-        container.appendChild(div);
-      });
-    }
+      if (questionsDéjàAffichées.has(data.question)) return; // ⛔ Ignore les doublons
+      questionsDéjàAffichées.add(data.question);
 
-    function verifierReponse(reponse, bonneReponse, explication) {
-      if (reponse === bonneReponse) {
-        alert("✅ Bonne réponse !\n\n" + explication);
-      } else {
-        alert("❌ Mauvaise réponse.\n\n" + explication);
-      }
-    }
-  </script>
+      const div = document.createElement('div');
+      div.className = 'page';
+      div.innerHTML = `
+        <h3>${data.question}</h3>
+        ${data.options.map(opt => `
+          <button onclick="verifierReponse('${opt}', '${data.bonneReponse}', \`${data.explication}\`)">${opt}</button>
+        `).join('')}
+      `;
+      container.appendChild(div);
+    });
+  }
+</script>
+
 </body>
 </html>
