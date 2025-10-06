@@ -58,20 +58,16 @@
       cursor: pointer;
       transition: all 0.3s ease;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      /* Icônes pour les boutons (inspiré de l'image) */
       display: flex;
       align-items: center;
       justify-content: center;
     }
-
+    
     .grid button:before {
         margin-right: 8px;
         font-weight: bold;
     }
-    .grid button:nth-child(1):before { content: '📚'; }
-    .grid button:nth-child(2):before { content: '📄'; }
-    .grid button:nth-child(3):before { content: '🏆'; }
-    .grid button:nth-child(4):before { content: '🧠'; }
+    /* Les icônes pour la grille sont gérées par le texte du bouton dans le HTML, c'est plus simple ici */
 
     .grid button:hover {
       background-color: #1a252f;
@@ -134,11 +130,11 @@
       background-color: #1a252f;
     }
 
-    /* NOUVEAUX STYLES POUR LE FEEDBACK VISUEL */
+    /* Styles pour le feedback visuel du Quiz */
     .page button:disabled {
         opacity: 0.6;
         cursor: default;
-        transition: none; /* Empêche les transitions sur l'opacité */
+        transition: none;
     }
     
     .explication {
@@ -150,12 +146,44 @@
       background-color: #f4f6f8;
       color: #2c3e50;
       text-align: left;
-      border-left: 5px solid #2c3e50; /* Style élégant */
+      border-left: 5px solid #2c3e50; 
     }
     
     .explication strong {
         font-weight: bold;
         color: #1a252f;
+    }
+
+    /* Style pour les pages de contenu (Fiches, Défis, Coaching) */
+    .content-page {
+        background: #fff;
+        border-radius: 10px;
+        padding: 30px;
+        margin: 20px auto;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        text-align: left;
+    }
+    .content-page h2 {
+        text-align: center;
+        color: #2c3e50;
+        margin-bottom: 20px;
+    }
+    .content-page p {
+        text-align: center;
+        margin-bottom: 30px;
+        color: #555;
+    }
+    /* Bouton retour dans les pages de contenu */
+    .content-page button {
+        width: 50%;
+        margin: 0 auto;
+        display: block;
+        background-color: #3498db;
+    }
+    .content-page button:hover {
+        background-color: #2980b9;
     }
 
 
@@ -191,33 +219,53 @@
 </head>
 <body>
 
-  <div class="logo">📘 Prépa+</div>
-  <div class="slogan">Révise avec clarté. Progresse avec fierté.</div>
+  <div id="dashboardPage"> 
 
-  <div class="grid">
-    <button onclick="chargerQuiz()">Quiz</button>
-    <button onclick="alert('Fiches à venir')">Fiches</button>
-    <button onclick="alert('Défis à venir')">Défis</button>
-    <button onclick="alert('Coaching IA à venir')">Coaching IA</button>
+    <div class="logo">📘 Prépa+</div>
+    <div class="slogan">Révise avec clarté. Progresse avec fierté.</div>
+
+    <div class="grid">
+      <button onclick="changerPage('quiz')">📚 Quiz</button>
+      <button onclick="changerPage('fiches')">📄 Fiches</button>
+      <button onclick="changerPage('defis')">🏆 Défis</button>
+      <button onclick="changerPage('coaching')">🧠 Coaching IA</button>
+    </div>
+
+    <div class="progress">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <p>Tu as révisé <strong id="progressText">12%</strong> cette semaine</p>
+
+    <div class="quote">“Ton avenir mérite ton attention aujourd’hui.”</div>
+
+    <div id="quizContainer"></div>
+
+    <div class="admin-link">
+      <a href="admin.html"><button>🔐 Accès Admin</button></a>
+    </div>
+
+  </div> 
+  <div id="fichesPage" class="content-page" style="display: none;">
+      <h2>📄 Mes Fiches de Révision</h2>
+      <p>Contenu des fiches de révision à venir.</p>
+      <button onclick="changerPage('dashboard')">Retour à l'accueil</button>
   </div>
 
-  <div class="progress">
-    <div class="progress-bar" id="progressBar"></div>
+  <div id="defisPage" class="content-page" style="display: none;">
+      <h2>🏆 Défis de la Semaine</h2>
+      <p>Contenu des défis à venir.</p>
+      <button onclick="changerPage('dashboard')">Retour à l'accueil</button>
   </div>
-  <p>Tu as révisé <strong id="progressText">12%</strong> cette semaine</p>
 
-  <div class="quote">“Ton avenir mérite ton attention aujourd’hui.”</div>
-
-  <div id="quizContainer"></div>
-
-  <div class="admin-link">
-    <a href="admin.html"><button>🔐 Accès Admin</button></a>
+  <div id="coachingPage" class="content-page" style="display: none;">
+      <h2>🧠 Coaching IA</h2>
+      <p>Interface de dialogue avec l'IA à venir.</p>
+      <button onclick="changerPage('dashboard')">Retour à l'accueil</button>
   </div>
 
   <footer>Conçu avec passion par <strong>Gabby Umba — ISC Lwanga</strong></footer>
 
   <script>
-    // ⚠️ IMPORTANT: Votre clé est exposée ici. Pensez à sécuriser vos règles Firestore !
     const firebaseConfig = {
       apiKey: "AIzaSyAuHPWVOkd96xPqKQ_K1cC4n4ihuPfuNFQ",
       authDomain: "abiga-1718.firebaseapp.com",
@@ -230,12 +278,47 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    // Mappage des pages pour une gestion facile
+    const pages = {
+        'dashboard': 'dashboardPage',
+        'quiz': 'dashboardPage', 
+        'fiches': 'fichesPage',
+        'defis': 'defisPage',
+        'coaching': 'coachingPage'
+    };
+
     window.onload = () => {
       document.getElementById("progressBar").style.width = "12%";
       document.getElementById("progressText").textContent = "12%";
     };
 
     let essais = {}; // Compteur d'essais pour chaque question
+
+    /**
+     * Change l'écran affiché en masquant les autres.
+     * @param {string} pageId - L'identifiant de la page à afficher (e.g., 'fiches').
+     */
+    function changerPage(pageId) {
+        // Liste de tous les conteneurs de pages que l'on veut gérer
+        const allPageContainers = document.querySelectorAll('#dashboardPage, .content-page');
+        
+        // 1. Masquer toutes les pages
+        allPageContainers.forEach(page => {
+            page.style.display = 'none';
+        });
+        
+        // 2. Afficher la page demandée
+        const targetPageElement = document.getElementById(pages[pageId]);
+        if (targetPageElement) {
+            targetPageElement.style.display = 'block';
+        }
+        
+        // 3. Logique spécifique pour le Quiz
+        if (pageId === 'quiz') {
+            chargerQuiz(); 
+        }
+    }
+
 
     /**
      * Vérifie la réponse du quiz et fournit un feedback visuel.
@@ -260,10 +343,7 @@
             parentDiv.appendChild(explicationDiv);
         }
 
-        explicationDiv.style.display = 'block'; // S'assurer que la zone est visible
-        explicationDiv.style.backgroundColor = '#f4f6f8'; // Couleur par défaut
-
-        // Désactiver TOUS les boutons immédiatement pour éviter de tricher après un essai
+        explicationDiv.style.display = 'block';
         optionsButtons.forEach(btn => btn.disabled = true);
         
         // Si la réponse est correcte
@@ -273,34 +353,31 @@
             explicationDiv.style.borderLeftColor = '#25D366';
             
             explicationDiv.innerHTML = `✅ **Bonne réponse !**<br> ${explication}`;
+            essais[questionId] = 0; 
             
-            // Logique de progression à ajouter ici plus tard
-            // updateProgress(1); 
-            
-            essais[questionId] = 0; // Marquer comme réussi
+            // NOTE: La logique pour mettre à jour la progression doit être ajoutée ici !
         } 
         // Si la réponse est incorrecte
         else {
             element.style.backgroundColor = '#E57373'; // Rouge
             
-            // Si c'est le dernier essai (après 3 tentatives, on donne la réponse)
             if (essais[questionId] >= 3) {
                 // Montrer la bonne réponse en vert
                 optionsButtons.forEach(btn => {
                     if (btn.textContent.trim() === bonneReponse.trim()) {
                         btn.style.backgroundColor = '#25D366';
-                        btn.style.opacity = 1; // Rendre plus visible
+                        btn.style.opacity = 1;
                     }
                 });
                 
                 explicationDiv.style.borderLeftColor = '#E57373';
                 explicationDiv.innerHTML = `❌ **Fin des essais.**<br>La bonne réponse était : **${bonneReponse}**.<br>📘 Explication : ${explication}`;
-                essais[questionId] = 0; // Réinitialiser
+                essais[questionId] = 0;
                 
             } else {
                 // Tentative incorrecte - permettre d'essayer une autre option
                 optionsButtons.forEach(btn => btn.disabled = false); // Réactiver TOUS les boutons
-                element.disabled = true; // Désactiver l'option sélectionnée seulement
+                element.disabled = true; // Désactiver l'option sélectionnée
                 
                 explicationDiv.style.borderLeftColor = '#E57373';
                 explicationDiv.innerHTML = `❌ Mauvaise réponse. Essaie encore (Tentative ${essais[questionId]} / 3)`;
@@ -320,7 +397,7 @@
         container.innerHTML = ""; // Vider après chargement
 
         if (snapshot.empty) {
-             container.innerHTML = "Aucune question de quiz trouvée dans la base de données.";
+             container.innerHTML = "Aucune question de quiz trouvée dans la base de données. Utilisez l'Accès Admin pour en ajouter.";
              return;
         }
 
@@ -330,19 +407,19 @@
           const data = doc.data();
           const id = doc.id;
 
-          // Simple vérification pour éviter d'afficher le même contenu si plusieurs docs ont la même question
           if (questionsDéjàAffichées.has(data.question)) return;
           questionsDéjàAffichées.add(data.question);
 
           // On gère les apostrophes dans la chaîne de caractères passée à la fonction JS
           const safeExplication = data.explication ? data.explication.replace(/'/g, "\\'") : '';
+          const safeReponses = data.bonneReponse ? data.bonneReponse.replace(/'/g, "\\'") : '';
 
           const div = document.createElement('div');
           div.className = 'page';
           div.innerHTML = `
             <h3>${data.question}</h3>
             ${data.options.map(opt => `
-              <button onclick="verifierReponse(this, '${opt.replace(/'/g, "\\'")}', '${data.bonneReponse.replace(/'/g, "\\'")}', \`${safeExplication}\`, '${id}')">${opt}</button>
+              <button onclick="verifierReponse(this, '${opt.replace(/'/g, "\\'")}', '${safeReponses}', \`${safeExplication}\`, '${id}')">${opt}</button>
             `).join('')}
             `;
           container.appendChild(div);
@@ -350,7 +427,7 @@
 
       } catch (error) {
         console.error("Erreur lors du chargement des quizzes : ", error);
-        container.innerHTML = "Erreur de connexion à la base de données.";
+        container.innerHTML = "Erreur de connexion à la base de données. Vérifiez votre console.";
       }
     }
   </script>
