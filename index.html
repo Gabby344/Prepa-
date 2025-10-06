@@ -78,7 +78,7 @@
 
     .progress-bar {
       height: 20px;
-      width: 0%; /* Initialisation à 0% */
+      width: 0%; 
       background-color: #25D366;
       transition: width 1s ease;
     }
@@ -178,6 +178,31 @@
     .content-page button:hover {
         background-color: #2980b9;
     }
+    
+    /* Style pour le menu de filtre */
+    .quiz-filter {
+        text-align: center;
+        margin-bottom: 20px;
+        padding: 10px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .quiz-filter label, .quiz-filter select {
+        font-size: 1em;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+
+    .quiz-filter select {
+        padding: 8px 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        margin-left: 10px;
+        cursor: pointer;
+        width: 150px;
+    }
 
 
     .admin-link {
@@ -231,9 +256,17 @@
 
     <div class="quote">“Ton avenir mérite ton attention aujourd’hui.”</div>
     
+    <div class="quiz-filter">
+        <label for="matiereSelect">Matière :</label>
+        <select id="matiereSelect" onchange="changerMatiere()">
+            <option value="tout">Toutes les Matières</option>
+            </select>
+        <button onclick="chargerQuiz()" style="width: auto; margin-top: 10px; padding: 8px 15px; background-color: #3498db; margin-left: 10px;">Recharger le Quiz</button>
+    </div>
+
     <div id="quizContainer">
         <div class="page" style="text-align: center; padding: 30px;">
-            Clique sur 📚 Quiz pour commencer une session de révision !
+            Sélectionne une matière ou clique sur "Recharger le Quiz" pour commencer !
         </div>
     </div>
 
@@ -244,19 +277,37 @@
   </div> 
   <div id="fichesPage" class="content-page" style="display: none;">
       <h2>📄 Mes Fiches de Révision</h2>
-      <p>Contenu des fiches de révision à venir.</p>
+      <p>Bienvenue dans l'espace Fiches. Cet endroit est dédié à la consolidation de tes connaissances par la lecture.</p>
+      
+      <h3>Thèmes Disponibles :</h3>
+      <ul>
+        <li>Géographie : Les grands fleuves africains</li>
+        <li>Histoire : L'indépendance de la RDC</li>
+        <li>Économie : Les principes de la microéconomie</li>
+      </ul>
+      <p>💡 **Astuce :** Ces fiches sont synchronisées avec les quiz pour une révision complète.</p>
       <button onclick="changerPage('dashboard')">Retour à l'accueil</button>
   </div>
 
   <div id="defisPage" class="content-page" style="display: none;">
       <h2>🏆 Défis de la Semaine</h2>
-      <p>Contenu des défis à venir.</p>
+      <p>C'est ici que tu peux te mesurer à d'autres étudiants de l'ISC Lwanga !</p>
+      
+      <h3>Défis Actuels :</h3>
+      <p>Challenge : Répondre correctement à 20 questions de Droit en moins de 5 minutes.</p>
+      <p style="font-weight: bold; color: green;">Statut : Non commencé</p>
+      <p>Prochain défi disponible : demain à 18h00.</p>
       <button onclick="changerPage('dashboard')">Retour à l'accueil</button>
   </div>
 
   <div id="coachingPage" class="content-page" style="display: none;">
       <h2>🧠 Coaching IA</h2>
-      <p>Interface de dialogue avec l'IA à venir.</p>
+      <p>Besoin d'aide sur un concept ? Demande à notre IA coach !</p>
+      
+      <textarea placeholder="Ex: Explique-moi la différence entre l'inflation et la déflation." rows="4" style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;"></textarea>
+      <button style="background-color: #e74c3c; margin-bottom: 20px;">Poser la question</button>
+      
+      <p style="font-size: 0.9em; color: #888;">*Note : Le coaching IA est une simulation pour l'instant.*</p>
       <button onclick="changerPage('dashboard')">Retour à l'accueil</button>
   </div>
 
@@ -276,7 +327,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Mappage des pages pour la fonction changerPage()
     const pages = {
         'dashboard': 'dashboardPage',
         'quiz': 'dashboardPage', 
@@ -285,29 +335,27 @@
         'coaching': 'coachingPage'
     };
 
-    let essais = {}; // Compteur d'essais pour chaque question
-    let questionsDuJour = []; // Les questions tirées au sort pour la session
-    let questionsReussies = new Set(); // ID des questions déjà réussies dans cette session
-    const MAX_QUESTIONS = 5; // Nombre maximum de questions à afficher
-    const PROGRESSION_PAR_QUESTION = 5; // Chaque question réussie augmente la progression de 5%
+    let essais = {}; 
+    let questionsDuJour = []; 
+    let questionsReussies = new Set(); 
+    const MAX_QUESTIONS = 5; 
+    const PROGRESSION_PAR_QUESTION = 5; 
+    let progressionActuelle = 0; 
+    let matieresDisponibles = new Set(); // Pour le filtrage
 
-    // --- GESTION DE LA PROGRESSION (Étape 2) ---
-    let progressionActuelle = 0; // Stocke la progression en %
+    // --- GESTION DE LA PROGRESSION ---
     
     window.onload = () => {
-        // Charge la progression enregistrée (ou commence à 0)
         progressionActuelle = parseInt(localStorage.getItem('user_progress')) || 0;
         mettreAJourProgressionUI();
+        chargerMatieresDisponibles(); // Charge le filtre au démarrage
     };
 
-    /** Met à jour la barre de progression et le texte. */
     function mettreAJourProgressionUI() {
         document.getElementById("progressBar").style.width = progressionActuelle + "%";
         document.getElementById("progressText").textContent = progressionActuelle + "%";
-        // Sauvegarde la progression
         localStorage.setItem('user_progress', progressionActuelle);
 
-        // Si 100% est atteint, réinitialisation (ou affichage d'un message de félicitations)
         if (progressionActuelle >= 100) {
             alert("Félicitations ! Tu as atteint ton objectif de révision pour cette semaine. Réinitialisation de la progression.");
             progressionActuelle = 0;
@@ -315,6 +363,46 @@
         }
     }
 
+
+    // --- GESTION DU FILTRE DE MATIÈRE ---
+
+    async function chargerMatieresDisponibles() {
+        const selectElement = document.getElementById("matiereSelect");
+        
+        try {
+            // Récupère TOUS les documents (nécessaire pour obtenir toutes les matières)
+            const snapshot = await db.collection("quizzes").get();
+            
+            matieresDisponibles.clear();
+            snapshot.forEach(doc => {
+                const matiere = doc.data().matière;
+                if (matiere) {
+                    matieresDisponibles.add(matiere.trim());
+                }
+            });
+
+            // Supprimer toutes les options sauf la première ("Tout")
+            while (selectElement.options.length > 1) {
+                selectElement.remove(1);
+            }
+
+            // Ajouter les nouvelles options
+            matieresDisponibles.forEach(matiere => {
+                const option = document.createElement('option');
+                option.value = matiere;
+                option.textContent = matiere;
+                selectElement.appendChild(option);
+            });
+            
+        } catch (error) {
+            console.error("Erreur lors du chargement des matières : ", error);
+        }
+    }
+    
+    function changerMatiere() {
+        // Recharge le quiz immédiatement après avoir changé la matière
+        chargerQuiz(); 
+    }
 
     // --- FONCTION DE NAVIGATION ---
     
@@ -330,30 +418,38 @@
             targetPageElement.style.display = 'block';
         }
         
+        // Si on clique sur le bouton Quiz (depuis la grille), on charge le quiz.
         if (pageId === 'quiz') {
             chargerQuiz(); 
         }
     }
 
 
-    // --- FONCTIONS DU QUIZ ---
+    // --- FONCTIONS DU QUIZ AVEC FILTRE ---
 
-    /** Tire au sort les questions depuis la base de données (Étape 1). */
     async function chargerQuiz() {
       const container = document.getElementById("quizContainer");
       container.innerHTML = "Chargement des questions...";
+      
+      const matiereSelectionnee = document.getElementById("matiereSelect").value;
+      let query = db.collection("quizzes");
+      
+      // FILTRE PAR MATIÈRE : Si "tout" n'est pas sélectionné, ajouter la clause where()
+      if (matiereSelectionnee !== 'tout') {
+          query = query.where("matière", "==", matiereSelectionnee);
+      }
 
       try {
-        const snapshot = await db.collection("quizzes").get();
+        // Exécution de la requête filtrée (ou non)
+        const snapshot = await query.get();
 
         if (snapshot.empty) {
-             container.innerHTML = "<div class='page'>Aucune question de quiz trouvée dans la base de données.</div>";
+             container.innerHTML = `<div class='page'>Aucune question trouvée pour la matière : <strong>${matiereSelectionnee}</strong>.</div>`;
              return;
         }
 
         const toutesLesQuestions = [];
         snapshot.forEach(doc => {
-            // Ajout du ID du document à l'objet de données
             toutesLesQuestions.push({ id: doc.id, ...doc.data() }); 
         });
 
@@ -362,10 +458,10 @@
         
         // 2. Sélectionner les X premières questions
         questionsDuJour = toutesLesQuestions.slice(0, MAX_QUESTIONS);
-        questionsReussies.clear(); // Réinitialise le suivi des réussites
-        essais = {}; // Réinitialise les essais
+        questionsReussies.clear(); 
+        essais = {}; 
 
-        container.innerHTML = ""; // Vider après chargement
+        container.innerHTML = ""; 
         
         if (questionsDuJour.length === 0) {
             container.innerHTML = "<div class='page'>Aucune question n'a été sélectionnée.</div>";
@@ -374,13 +470,13 @@
 
         // 3. Afficher les questions sélectionnées
         questionsDuJour.forEach(data => {
-          // Gérer les apostrophes pour passer les chaînes de caractères aux fonctions JS
           const safeExplication = data.explication ? data.explication.replace(/'/g, "\\'") : '';
           const safeReponses = data.bonneReponse ? data.bonneReponse.replace(/'/g, "\\'") : '';
 
           const div = document.createElement('div');
           div.className = 'page';
           div.innerHTML = `
+            <p style="font-size: 0.9em; color: #888;">[${data.matière} - ${data.niveau}]</p>
             <h3>${data.question}</h3>
             ${data.options.map(opt => `
               <button onclick="verifierReponse(this, '${opt.replace(/'/g, "\\'")}', '${safeReponses}', \`${safeExplication}\`, '${data.id}')">${opt}</button>
@@ -391,7 +487,7 @@
 
       } catch (error) {
         console.error("Erreur lors du chargement des quizzes : ", error);
-        container.innerHTML = "<div class='page'>Erreur de connexion à la base de données.</div>";
+        container.innerHTML = "<div class='page'>Erreur de connexion à la base de données. Vérifiez les règles Firestore.</div>";
       }
     }
 
@@ -405,10 +501,8 @@
         const optionsButtons = parentDiv.querySelectorAll('button');
         let explicationDiv = parentDiv.querySelector('.explication');
         
-        // Si la question a déjà été réussie, ignorer l'action
         if (questionsReussies.has(questionId)) return;
 
-        // Créer la zone d'explication si elle n'existe pas
         if (!explicationDiv) {
             explicationDiv = document.createElement('div');
             explicationDiv.className = 'explication';
@@ -418,22 +512,20 @@
         explicationDiv.style.display = 'block';
         
         // Si la réponse est correcte
-        if (reponse === bonneReponse) {
+        if (reponse.trim() === bonneReponse.trim()) {
             element.style.backgroundColor = '#25D366'; // Vert
             element.style.boxShadow = '0 0 10px rgba(37, 211, 102, 0.5)';
             explicationDiv.style.borderLeftColor = '#25D366';
             
             explicationDiv.innerHTML = `✅ **Bonne réponse !**<br> ${explication}`;
             
-            // Une seule réussite par question
             if (!questionsReussies.has(questionId)) {
                 questionsReussies.add(questionId);
-                // Mise à jour de la progression (Étape 2)
                 progressionActuelle += PROGRESSION_PAR_QUESTION;
                 mettreAJourProgressionUI();
             }
 
-            optionsButtons.forEach(btn => btn.disabled = true); // Désactiver toutes les options
+            optionsButtons.forEach(btn => btn.disabled = true); 
         } 
         // Si la réponse est incorrecte
         else {
@@ -441,22 +533,20 @@
             element.style.backgroundColor = '#E57373'; // Rouge
             
             if (essais[questionId] >= 3) {
-                // Montrer la bonne réponse en vert
                 optionsButtons.forEach(btn => {
                     if (btn.textContent.trim() === bonneReponse.trim()) {
                         btn.style.backgroundColor = '#25D366';
                         btn.style.opacity = 1;
                     }
-                    btn.disabled = true; // Désactiver toutes les options après 3 essais
+                    btn.disabled = true; 
                 });
                 
                 explicationDiv.style.borderLeftColor = '#E57373';
                 explicationDiv.innerHTML = `❌ **Fin des essais.**<br>La bonne réponse était : **${bonneReponse}**.<br>📘 Explication : ${explication}`;
                 
             } else {
-                // Tentative incorrecte - permettre d'essayer une autre option
-                optionsButtons.forEach(btn => btn.disabled = false); // Réactiver TOUS les boutons
-                element.disabled = true; // Désactiver l'option sélectionnée
+                optionsButtons.forEach(btn => btn.disabled = false); 
+                element.disabled = true; 
                 
                 explicationDiv.style.borderLeftColor = '#E57373';
                 explicationDiv.innerHTML = `❌ Mauvaise réponse. Essaie encore (Tentative ${essais[questionId]} / 3)`;
