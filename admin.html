@@ -6,7 +6,6 @@
   <title>Admin Prépa+</title>
   
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore-compat.js"></script>
   
   <style>
@@ -149,6 +148,12 @@
 
 
   <script>
+    // --- IDENTIFIANTS CODÉS EN DUR (ATTENTION : SÉCURITÉ FAIBLE !) ---
+    const ADMIN_EMAIL = "gabbyumba344@gmail.com";
+    const ADMIN_PASSWORD = "prepa2025";
+    let estConnecte = false;
+    // -----------------------------------------------------------------
+
     const firebaseConfig = {
       apiKey: "AIzaSyAuHPWVOkd96xPqKQ_K1cC4n4ihuPfuNFQ",
       authDomain: "abiga-1718.firebaseapp.com",
@@ -159,15 +164,15 @@
     };
 
     firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
     const db = firebase.firestore();
 
     let quizEnEditionId = null;
 
-    // --- LOGIQUE D'AUTHENTIFICATION ---
-
-    auth.onAuthStateChanged(user => {
-        if (user) {
+    // --- LOGIQUE D'AUTHENTIFICATION LOCALE ---
+    
+    // Fonction qui met à jour l'interface en fonction de l'état de connexion
+    function mettreAJourUI() {
+        if (estConnecte) {
             document.getElementById("authSection").style.display = "none";
             document.getElementById("formulaire").style.display = "block";
             document.getElementById("listeQuizzes").style.display = "block";
@@ -178,37 +183,51 @@
             document.getElementById("listeQuizzes").style.display = "none";
             quizEnEditionId = null;
         }
-    });
+    }
 
-    async function seConnecter() {
+    // Fonction de connexion : vérification des chaînes de caractères
+    function seConnecter() {
         const email = document.getElementById("adminEmail").value;
         const password = document.getElementById("adminPassword").value;
         const authMsg = document.getElementById("authMessage");
         authMsg.style.display = "none";
 
-        try {
-            await auth.signInWithEmailAndPassword(email, password);
-        } catch (error) {
+        if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+            estConnecte = true;
+            // Stocke l'état de connexion dans la session (pour ne pas perdre la connexion au rechargement)
+            sessionStorage.setItem('admin_logged_in', 'true'); 
+            mettreAJourUI();
+        } else {
             authMsg.className = "error";
             authMsg.innerText = "Erreur de connexion : Vérifiez l'email/mot de passe.";
-            console.error("Erreur Firebase Auth:", error); 
             authMsg.style.display = "block";
         }
     }
     
+    // Initialisation au chargement de la page
+    window.onload = function() {
+        if (sessionStorage.getItem('admin_logged_in') === 'true') {
+            estConnecte = true;
+        }
+        mettreAJourUI();
+    };
+
     function deconnexion() {
-        auth.signOut();
+        estConnecte = false;
+        sessionStorage.removeItem('admin_logged_in');
+        mettreAJourUI();
         document.getElementById("authMessage").style.display = "none";
         document.getElementById("feedbackMessage").style.display = "none";
     }
 
     // --- FONCTIONS CRUD (FORMULAIRE) ---
     
-    function gererSoumissionQuiz() {
+    async function gererSoumissionQuiz() {
+        if (!estConnecte) return; // Sécurité de base
         if (quizEnEditionId) {
-            modifierQuiz(quizEnEditionId);
+            await modifierQuiz(quizEnEditionId);
         } else {
-            ajouterQuiz();
+            await ajouterQuiz();
         }
     }
 
